@@ -1,0 +1,14 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Productos | Administración TCG Market</title><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../assets/css/admin.css"></head><body class="admin-body" data-root=".." data-admin="true"><div class="admin-shell"><aside class="admin-sidebar">
+  <a class="logo" href="index.html"><img src="../assets/img/logo.svg" alt="TCG Market"></a>
+  <nav class="admin-nav" aria-label="Administración">
+    <a href="index.html" >Resumen</a>
+    <a href="productos.html" aria-current="page" data-vendor-allowed>Productos</a>
+    <a href="producto-form.html" data-admin-only>Nuevo producto</a>
+    <a href="ordenes.html" data-vendor-allowed>Órdenes</a>
+    <a href="usuarios.html" data-admin-only>Usuarios</a>
+    <a href="usuario-form.html" data-admin-only>Nuevo usuario</a>
+    <div class="admin-nav-sep"></div>
+    <a href="../index.html">Volver a la tienda</a>
+  </nav>
+  <div class="admin-sidebar-bottom"><a class="btn btn-secondary" href="#" data-logout>Cerrar sesión</a></div>
+</aside><div class="admin-main"><header class="admin-topbar"><strong>Administración</strong><span data-admin-user>Usuario</span></header><main class="admin-content"><div class="admin-title"><h1>Productos</h1><p>Listado de productos disponibles en la tienda.</p></div><div class="admin-toolbar"><span>Consulta y mantenimiento del catálogo.</span><a class="btn btn-primary" href="producto-form.html" data-admin-only>Nuevo producto</a></div><div class="table-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead><tbody data-admin-products></tbody></table></div></main></div></div><script src="../assets/js/data.js"></script><script src="../assets/js/common.js"></script><script src="../assets/js/admin.js"></script></body></html>
