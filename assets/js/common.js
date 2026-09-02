@@ -154,7 +154,7 @@
     const session = TCG.getSession();
     document.querySelectorAll('[data-session-label]').forEach(el => {
       el.textContent = session ? `${session.firstName} · ${session.role}` : 'Iniciar sesión';
-      if (session && el.tagName === 'A') el.href = session.role === 'Cliente' ? `${TCG.siteRoot()}/index.html` : `${TCG.siteRoot()}/admin/index.html`;
+      if (session && el.tagName === 'A') el.href = session.role === 'Cliente' ? `${TCG.siteRoot()}/cuenta.html` : `${TCG.siteRoot()}/admin/index.html`;
     });
   };
 
