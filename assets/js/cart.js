@@ -159,6 +159,137 @@
   }
 
 
+  // Genera el siguiente número de orden disponible: ORD-001, ORD-002, etc.
+  function nextOrderId(orders) {
+    const largest = orders.reduce((max, order) => {
+      const match = String(order.id || '').match(/^ORD-(\d+)$/i);
+      return match ? Math.max(max, Number(match[1])) : max;
+    }, 0);
+
+    return `ORD-${String(largest + 1).padStart(3, '0')}`;
+  }
+
+
+  // Devuelve la fecha local como YYYY-MM-DD.
+  function currentLocalDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+
+  function processCheckout() {
+    const session = TCG.getSession();
+
+    // Para generar un pedido necesitamos saber a qué cliente pertenece.
+    if (!session || session.role !== 'Cliente') {
+      TCG.flash(
+        'Debes iniciar sesión como Cliente para completar la compra.',
+        'error'
+      );
+      return;
+    }
+
+    const cart = TCG.getCart();
+
+    if (!cart.length) {
+      TCG.flash('Tu carrito está vacío.', 'error');
+      return;
+    }
+
+    const products = TCG.getProducts();
+    const orderItems = [];
+    let total = 0;
+
+    // Primero validamos TODO el carrito. No descontamos stock todavía.
+    for (const item of cart) {
+      const product = products.find(
+        row => Number(row.id) === Number(item.productId)
+      );
+
+      if (!product) {
+        TCG.flash(
+          'Uno de los productos del carrito ya no existe.',
+          'error'
+        );
+        return;
+      }
+
+      const qty = Number(item.qty || 0);
+
+      if (qty < 1) {
+        TCG.flash(
+          `La cantidad de ${product.name} no es válida.`,
+          'error'
+        );
+        return;
+      }
+
+      if (qty > Number(product.stock || 0)) {
+        TCG.flash(
+          `No hay stock suficiente de ${product.name}. Disponible: ${product.stock}.`,
+          'error'
+        );
+        return;
+      }
+
+      orderItems.push({
+        productId: Number(product.id),
+        name: product.name,
+        qty,
+        price: Number(product.price)
+      });
+
+      total += Number(product.price) * qty;
+    }
+
+    // Si todo el carrito es válido, ahora sí descontamos el stock.
+    orderItems.forEach(item => {
+      const product = products.find(
+        row => Number(row.id) === Number(item.productId)
+      );
+
+      product.stock = Number(product.stock) - Number(item.qty);
+    });
+
+    const orders = TCG.getOrders();
+    const customer = `${session.firstName || ''} ${session.lastName || ''}`.trim();
+
+    const newOrder = {
+      id: nextOrderId(orders),
+      customer: customer || session.firstName || 'Cliente',
+      customerEmail: session.email,
+      date: currentLocalDate(),
+      total,
+      status: 'Pendiente',
+      items: orderItems
+    };
+
+    // Guardamos inventario y pedido en localStorage.
+    const productsSaved = TCG.saveProducts(products);
+    const ordersSaved = TCG.write(TCG_STORAGE.orders, [...orders, newOrder]);
+
+    if (!productsSaved || !ordersSaved) {
+      TCG.flash(
+        'No se pudo guardar la compra. Intenta nuevamente.',
+        'error'
+      );
+      return;
+    }
+
+    // La compra ya quedó registrada, por lo tanto vaciamos el carrito.
+    TCG.saveCart([]);
+    renderCart();
+
+    TCG.flash(
+      `Tu pedido ${newOrder.id} ha sido correctamente ingresado.`,
+      'success'
+    );
+  }
+
+
   document.addEventListener('DOMContentLoaded', function () {
 
     // Mostrar carrito al entrar a la página
@@ -192,12 +323,7 @@
     if (checkout) {
 
       checkout.addEventListener('click', () => {
-
-        TCG.flash(
-          'La evaluación solicita implementar el carrito; el pago real queda fuera de esta entrega.',
-          'success'
-        );
-
+        processCheckout();
       });
 
     }
@@ -241,11 +367,11 @@
         TCG.saveCart([]);
 
 
-        // Actualizar pantalla
+        // Volver a mostrar carrito vacío
         renderCart();
 
 
-        // Mensaje de confirmación
+        // Mensaje
         TCG.flash(
           'Carrito vaciado correctamente.',
           'success'

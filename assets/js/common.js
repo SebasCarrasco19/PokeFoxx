@@ -152,10 +152,106 @@
 
   TCG.currentUserLabel = function () {
     const session = TCG.getSession();
+
     document.querySelectorAll('[data-session-label]').forEach(el => {
-      el.textContent = session ? `${session.firstName} · ${session.role}` : 'Iniciar sesión';
-      if (session && el.tagName === 'A') el.href = session.role === 'Cliente' ? `${TCG.siteRoot()}/cuenta.html` : `${TCG.siteRoot()}/admin/index.html`;
+      // Creamos un contenedor propio para poder mostrar el menú debajo del usuario.
+      let wrapper = el.closest('[data-session-wrapper]');
+      if (!wrapper) {
+        wrapper = document.createElement('span');
+        wrapper.dataset.sessionWrapper = 'true';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-flex';
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+      }
+
+      // Eliminamos un menú anterior si currentUserLabel() vuelve a ejecutarse.
+      wrapper.querySelectorAll('[data-session-menu]').forEach(menu => menu.remove());
+      el.onclick = null;
+      el.removeAttribute('aria-expanded');
+
+      if (!session) {
+        el.textContent = 'Iniciar sesión';
+        if (el.tagName === 'A') el.href = `${TCG.siteRoot()}/login.html`;
+        return;
+      }
+
+      el.textContent = `${session.firstName} · ${session.role}`;
+
+      // Administrador y Vendedor mantienen el acceso directo al panel administrativo.
+      if (session.role !== 'Cliente') {
+        if (el.tagName === 'A') el.href = `${TCG.siteRoot()}/admin/index.html`;
+        return;
+      }
+
+      // El Cliente abre un pequeño menú en vez de ir directamente a cuenta.html.
+      if (el.tagName === 'A') el.href = '#';
+      el.setAttribute('aria-expanded', 'false');
+      el.setAttribute('aria-haspopup', 'true');
+
+      const menu = document.createElement('div');
+      menu.dataset.sessionMenu = 'true';
+      menu.hidden = true;
+      menu.style.position = 'absolute';
+      menu.style.top = 'calc(100% + 8px)';
+      menu.style.right = '0';
+      menu.style.minWidth = '170px';
+      menu.style.padding = '8px';
+      menu.style.background = 'var(--surface)';
+      menu.style.border = '1px solid var(--border)';
+      menu.style.borderRadius = '12px';
+      menu.style.boxShadow = 'var(--shadow)';
+      menu.style.zIndex = '60';
+
+      const editProfile = document.createElement('a');
+      editProfile.href = `${TCG.siteRoot()}/cuenta.html`;
+      editProfile.textContent = 'Editar perfil';
+      editProfile.style.display = 'block';
+      editProfile.style.padding = '10px 12px';
+      editProfile.style.borderRadius = '8px';
+      editProfile.style.textDecoration = 'none';
+      editProfile.style.fontWeight = '700';
+      editProfile.style.whiteSpace = 'nowrap';
+
+      editProfile.addEventListener('mouseenter', () => {
+        editProfile.style.background = 'var(--surface-soft)';
+      });
+
+      editProfile.addEventListener('mouseleave', () => {
+        editProfile.style.background = 'transparent';
+      });
+
+      menu.appendChild(editProfile);
+      wrapper.appendChild(menu);
+
+      el.onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = menu.hidden;
+
+        // Cerramos cualquier otro menú de sesión antes de abrir este.
+        document.querySelectorAll('[data-session-menu]').forEach(other => {
+          if (other !== menu) other.hidden = true;
+        });
+
+        menu.hidden = !willOpen;
+        el.setAttribute('aria-expanded', String(willOpen));
+      };
     });
+
+    // Cierra el menú si el usuario hace clic fuera de él.
+    if (!TCG._sessionMenuOutsideBound) {
+      document.addEventListener('click', event => {
+        document.querySelectorAll('[data-session-wrapper]').forEach(wrapper => {
+          if (wrapper.contains(event.target)) return;
+          const menu = wrapper.querySelector('[data-session-menu]');
+          const label = wrapper.querySelector('[data-session-label]');
+          if (menu) menu.hidden = true;
+          if (label) label.setAttribute('aria-expanded', 'false');
+        });
+      });
+      TCG._sessionMenuOutsideBound = true;
+    }
   };
 
   TCG.requireRole = function (roles) {
