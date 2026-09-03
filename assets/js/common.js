@@ -2,7 +2,6 @@
   'use strict';
 
   window.TCG = window.TCG || {};
-
   const TCG = window.TCG;
 
   TCG.read = function (key, fallback) {
@@ -36,7 +35,6 @@
       const migratedProducts = savedProducts.map(product => {
         const seed = TCG_SEED_PRODUCTS.find(item => Number(item.id) === Number(product.id));
         if (!seed) return product;
-
         const migrated = { ...product };
         if (!migrated.game) { migrated.game = seed.game; updated = true; }
         if (typeof migrated.onSale !== 'boolean') { migrated.onSale = seed.onSale; updated = true; }
@@ -73,7 +71,11 @@
   TCG.clearSession = () => localStorage.removeItem(TCG_STORAGE.session);
 
   TCG.currency = function (value) {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(value || 0));
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0
+    }).format(Number(value || 0));
   };
 
   TCG.allowedEmail = function (email) {
@@ -89,10 +91,12 @@
     const dv = clean.slice(-1);
     let sum = 0;
     let multiplier = 2;
+
     for (let i = body.length - 1; i >= 0; i -= 1) {
       sum += Number(body[i]) * multiplier;
       multiplier = multiplier === 7 ? 2 : multiplier + 1;
     }
+
     const remainder = 11 - (sum % 11);
     const expected = remainder === 11 ? '0' : remainder === 10 ? 'K' : String(remainder);
     return dv === expected;
@@ -105,12 +109,15 @@
   TCG.updateCartCount = function () {
     const cart = TCG.getCart();
     const count = cart.reduce((acc, item) => acc + Number(item.qty || 0), 0);
-    document.querySelectorAll('[data-cart-count]').forEach(el => { el.textContent = count; });
+    document.querySelectorAll('[data-cart-count]').forEach(el => {
+      el.textContent = count;
+    });
   };
 
   TCG.addToCart = function (productId, qty) {
     const product = TCG.getProducts().find(p => Number(p.id) === Number(productId));
     if (!product) return { ok: false, message: 'El producto no existe.' };
+
     const requested = Math.max(1, parseInt(qty || 1, 10));
     if (product.stock <= 0) return { ok: false, message: 'El producto no tiene stock.' };
 
@@ -118,16 +125,21 @@
     const existing = cart.find(item => Number(item.productId) === Number(productId));
     const currentQty = existing ? Number(existing.qty) : 0;
     const newQty = currentQty + requested;
-    if (newQty > product.stock) return { ok: false, message: `Solo hay ${product.stock} unidad(es) disponibles.` };
+
+    if (newQty > product.stock) {
+      return { ok: false, message: `Solo hay ${product.stock} unidad(es) disponibles.` };
+    }
 
     if (existing) existing.qty = newQty;
     else cart.push({ productId: Number(productId), qty: requested });
+
     TCG.saveCart(cart);
     return { ok: true, message: 'Producto añadido al carrito.' };
   };
 
   TCG.flash = function (message, type) {
     let box = document.querySelector('[data-flash]');
+
     if (!box) {
       box = document.createElement('div');
       box.dataset.flash = 'true';
@@ -142,20 +154,47 @@
       box.style.boxShadow = '0 12px 30px rgba(0,0,0,.18)';
       document.body.appendChild(box);
     }
+
     box.textContent = message;
     box.style.background = type === 'error' ? '#fee4e2' : '#e7f6ef';
     box.style.color = type === 'error' ? '#b42318' : '#16794e';
     box.hidden = false;
+
     clearTimeout(TCG._flashTimer);
-    TCG._flashTimer = setTimeout(() => { box.hidden = true; }, 2500);
+    TCG._flashTimer = setTimeout(() => {
+      box.hidden = true;
+    }, 2500);
   };
+
+  function styleSessionMenuItem(item, danger) {
+    item.style.display = 'block';
+    item.style.width = '100%';
+    item.style.padding = '10px 12px';
+    item.style.border = '0';
+    item.style.borderRadius = '8px';
+    item.style.background = 'transparent';
+    item.style.textAlign = 'left';
+    item.style.textDecoration = 'none';
+    item.style.fontWeight = '700';
+    item.style.whiteSpace = 'nowrap';
+    item.style.color = danger ? 'var(--danger)' : 'var(--text)';
+    item.style.cursor = 'pointer';
+
+    item.addEventListener('mouseenter', () => {
+      item.style.background = danger ? '#fee4e2' : 'var(--surface-soft)';
+    });
+
+    item.addEventListener('mouseleave', () => {
+      item.style.background = 'transparent';
+    });
+  }
 
   TCG.currentUserLabel = function () {
     const session = TCG.getSession();
 
     document.querySelectorAll('[data-session-label]').forEach(el => {
-      // Creamos un contenedor propio para poder mostrar el menú debajo del usuario.
       let wrapper = el.closest('[data-session-wrapper]');
+
       if (!wrapper) {
         wrapper = document.createElement('span');
         wrapper.dataset.sessionWrapper = 'true';
@@ -165,8 +204,8 @@
         wrapper.appendChild(el);
       }
 
-      // Eliminamos un menú anterior si currentUserLabel() vuelve a ejecutarse.
       wrapper.querySelectorAll('[data-session-menu]').forEach(menu => menu.remove());
+
       el.onclick = null;
       el.removeAttribute('aria-expanded');
 
@@ -184,7 +223,7 @@
         return;
       }
 
-      // El Cliente abre un pequeño menú en vez de ir directamente a cuenta.html.
+      // Menú del Cliente.
       if (el.tagName === 'A') el.href = '#';
       el.setAttribute('aria-expanded', 'false');
       el.setAttribute('aria-haspopup', 'true');
@@ -195,7 +234,7 @@
       menu.style.position = 'absolute';
       menu.style.top = 'calc(100% + 8px)';
       menu.style.right = '0';
-      menu.style.minWidth = '170px';
+      menu.style.minWidth = '180px';
       menu.style.padding = '8px';
       menu.style.background = 'var(--surface)';
       menu.style.border = '1px solid var(--border)';
@@ -203,33 +242,44 @@
       menu.style.boxShadow = 'var(--shadow)';
       menu.style.zIndex = '60';
 
+      const viewProfile = document.createElement('a');
+      viewProfile.href = `${TCG.siteRoot()}/cuenta.html`;
+      viewProfile.textContent = 'Ver perfil';
+      styleSessionMenuItem(viewProfile, false);
+
       const editProfile = document.createElement('a');
-      editProfile.href = `${TCG.siteRoot()}/cuenta.html`;
+      editProfile.href = `${TCG.siteRoot()}/editar-perfil.html`;
       editProfile.textContent = 'Editar perfil';
-      editProfile.style.display = 'block';
-      editProfile.style.padding = '10px 12px';
-      editProfile.style.borderRadius = '8px';
-      editProfile.style.textDecoration = 'none';
-      editProfile.style.fontWeight = '700';
-      editProfile.style.whiteSpace = 'nowrap';
+      styleSessionMenuItem(editProfile, false);
 
-      editProfile.addEventListener('mouseenter', () => {
-        editProfile.style.background = 'var(--surface-soft)';
+      const separator = document.createElement('div');
+      separator.style.height = '1px';
+      separator.style.background = 'var(--border)';
+      separator.style.margin = '6px 4px';
+
+      const logout = document.createElement('button');
+      logout.type = 'button';
+      logout.textContent = 'Cerrar sesión';
+      styleSessionMenuItem(logout, true);
+      logout.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        TCG.clearSession();
+        window.location.href = `${TCG.siteRoot()}/login.html`;
       });
 
-      editProfile.addEventListener('mouseleave', () => {
-        editProfile.style.background = 'transparent';
-      });
-
+      menu.appendChild(viewProfile);
       menu.appendChild(editProfile);
+      menu.appendChild(separator);
+      menu.appendChild(logout);
       wrapper.appendChild(menu);
 
       el.onclick = event => {
         event.preventDefault();
         event.stopPropagation();
+
         const willOpen = menu.hidden;
 
-        // Cerramos cualquier otro menú de sesión antes de abrir este.
         document.querySelectorAll('[data-session-menu]').forEach(other => {
           if (other !== menu) other.hidden = true;
         });
@@ -239,33 +289,38 @@
       };
     });
 
-    // Cierra el menú si el usuario hace clic fuera de él.
     if (!TCG._sessionMenuOutsideBound) {
       document.addEventListener('click', event => {
         document.querySelectorAll('[data-session-wrapper]').forEach(wrapper => {
           if (wrapper.contains(event.target)) return;
+
           const menu = wrapper.querySelector('[data-session-menu]');
           const label = wrapper.querySelector('[data-session-label]');
+
           if (menu) menu.hidden = true;
           if (label) label.setAttribute('aria-expanded', 'false');
         });
       });
+
       TCG._sessionMenuOutsideBound = true;
     }
   };
 
   TCG.requireRole = function (roles) {
     const session = TCG.getSession();
+
     if (!session || !roles.includes(session.role)) {
       window.location.href = `${TCG.siteRoot()}/login.html`;
       return null;
     }
+
     return session;
   };
 
   function setupNavigation() {
     const toggle = document.querySelector('[data-nav-toggle]');
     const nav = document.querySelector('[data-main-nav]');
+
     if (toggle && nav) {
       toggle.addEventListener('click', () => nav.classList.toggle('open'));
     }

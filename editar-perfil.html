@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Editar perfil de cliente TCG Market">
+  <title>Editar perfil | TCG Market</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/account.css">
+</head>
+<body data-root=".">
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="index.html"><img src="assets/img/logo.svg" alt="TCG Market"></a>
+    <button class="nav-toggle" type="button" data-nav-toggle aria-label="Abrir menú">☰</button>
+
+    <nav class="main-nav" data-main-nav aria-label="Navegación principal">
+      <a href="index.html">Inicio</a>
+      <a href="productos.html">Productos</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="blog.html">Blog</a>
+      <a href="contacto.html">Contacto</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="session-link" href="#" data-session-label>Mi cuenta</a>
+      <a class="cart-link" href="carrito.html">
+        🛒 Carrito <span class="cart-count" data-cart-count>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="page-header">
+    <div class="container">
+      <span class="eyebrow">Cliente</span>
+      <h1>Editar perfil</h1>
+      <p>Actualiza tus datos personales. Tu rol continuará siendo Cliente.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <section class="content-card edit-profile-card">
+
+        <div class="edit-profile-top-actions">
+          <a class="btn btn-secondary btn-sm" href="cuenta.html">← Volver a mi perfil</a>
+        </div>
+
+        <div class="account-heading">
+          <div>
+            <h2>Datos personales</h2>
+            <p>Los cambios quedan guardados en localStorage.</p>
+          </div>
+        </div>
+
+        <span class="profile-role">Perfil: Cliente</span>
+
+        <form id="profileForm" novalidate>
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="profileRun">RUN</label>
+              <input id="profileRun" name="run" minlength="7" maxlength="9">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileFirstName">Nombre</label>
+              <input id="profileFirstName" name="firstName" maxlength="50">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileLastName">Apellidos</label>
+              <input id="profileLastName" name="lastName" maxlength="100">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileEmail">Correo</label>
+              <input id="profileEmail" name="email" type="email" maxlength="100">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileBirthDate">Fecha de nacimiento</label>
+              <input id="profileBirthDate" name="birthDate" type="date">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profilePassword">Nueva contraseña</label>
+              <input
+                id="profilePassword"
+                name="password"
+                type="password"
+                minlength="4"
+                maxlength="10"
+                autocomplete="new-password"
+              >
+              <span class="help-text">Déjala vacía si no quieres cambiarla.</span>
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileRegion">Región</label>
+              <select id="profileRegion" name="region"></select>
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group">
+              <label for="profileCommune">Comuna</label>
+              <select id="profileCommune" name="commune"></select>
+              <span class="error-text" data-field-error></span>
+            </div>
+
+            <div class="form-group full">
+              <label for="profileAddress">Dirección</label>
+              <input id="profileAddress" name="address" maxlength="300">
+              <span class="error-text" data-field-error></span>
+            </div>
+
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn btn-primary" type="submit">Guardar cambios</button>
+            <a class="btn btn-secondary" href="cuenta.html">Cancelar</a>
+          </div>
+        </form>
+
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3>TCG Market</h3>
+        <p>Tienda online básica de productos TCG desarrollada para la Evaluación Parcial 1 de DSY1104.</p>
+      </div>
+
+      <div>
+        <h3>Navegación</h3>
+        <p>
+          <a href="productos.html">Productos</a><br>
+          <a href="nosotros.html">Nosotros</a><br>
+          <a href="blog.html">Blog</a>
+        </p>
+      </div>
+
+      <div>
+        <h3>Cuenta</h3>
+        <p>
+          <a href="cuenta.html">Mi perfil</a><br>
+          <a href="editar-perfil.html">Editar perfil</a><br>
+          <a href="contacto.html">Contacto</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      Proyecto frontend desarrollado con HTML, CSS y JavaScript.
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/account.js"></script>
+</body>
+</html>
