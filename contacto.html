@@ -1,17 +1,144 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="TCG Market - tienda online básica de cartas coleccionables"><title>Contacto | TCG Market</title><link rel="stylesheet" href="assets/css/styles.css"></head>
-<body data-root="."><header class="site-header">
-  <div class="container header-inner">
-    <a class="logo" href="index.html"><img src="assets/img/logo.svg" alt="TCG Market"></a>
-    <button class="nav-toggle" type="button" data-nav-toggle aria-label="Abrir menú">☰</button>
-    <nav class="main-nav" data-main-nav aria-label="Navegación principal"><a href="index.html">Inicio</a><a href="productos.html">Productos</a><a href="nosotros.html">Nosotros</a><a href="blog.html">Blog</a><a href="contacto.html" aria-current="page">Contacto</a></nav>
-    <div class="header-actions">
-      <a class="session-link" href="login.html" data-session-label>Iniciar sesión</a>
-      <a class="cart-link" href="carrito.html">🛒 Carrito <span class="cart-count" data-cart-count>0</span></a>
-    </div>
-  </div>
-</header><main><section class="page-header"><div class="container"><span class="eyebrow">Contacto</span><h1>Envíanos un mensaje</h1><p>Vista de contacto con validaciones personalizadas en JavaScript.</p></div></section><section class="section"><div class="container"><form id="contactForm" class="content-card form-card" novalidate><div class="form-group"><label for="name">Nombre</label><input id="name" name="name" type="text" maxlength="100"><span class="error-text"></span></div><div class="form-group"><label for="email">Correo <span class="help-text">(opcional según anexo)</span></label><input id="email" name="email" type="email" maxlength="100"><span class="help-text">Si se informa, debe ser @duoc.cl, @profesor.duoc.cl o @gmail.com.</span><span class="error-text"></span></div><div class="form-group"><label for="comment">Comentario</label><textarea id="comment" name="comment" maxlength="500"></textarea><span class="help-text">Máximo 500 caracteres.</span><span class="error-text"></span></div><button class="btn btn-primary" type="submit">Enviar mensaje</button><div class="form-message" role="status"></div></form></div></section></main><footer class="site-footer"><div class="container"><div class="footer-grid">
-      <div><h3>TCG Market</h3><p>Tienda online básica de productos TCG desarrollada para la Evaluación Parcial 1 de DSY1104.</p></div>
-      <div><h3>Navegación</h3><p><a href="productos.html">Productos</a><br><a href="nosotros.html">Nosotros</a><br><a href="blog.html">Blog</a></p></div>
-      <div><h3>Cuenta</h3><p><a href="registro.html">Registrarse</a><br><a href="login.html">Iniciar sesión</a><br><a href="contacto.html">Contacto</a></p></div>
-    </div><div class="footer-bottom">Proyecto frontend desarrollado con HTML, CSS y JavaScript.</div></div></footer><script src="assets/js/data.js"></script><script src="assets/js/common.js"></script><script src="assets/js/forms.js"></script></body></html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="TCG Market - tienda online básica de cartas coleccionables"
+    />
+    <title>Contacto | TCG Market</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body data-root=".">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html"
+          ><img src="assets/img/logo.svg" alt="TCG Market"
+        /></a>
+        <button
+          class="nav-toggle"
+          type="button"
+          data-nav-toggle
+          aria-label="Abrir menú"
+        >
+          ☰
+        </button>
+        <nav class="main-nav" data-main-nav aria-label="Navegación principal">
+          <a href="index.html">Inicio</a><a href="productos.html">Productos</a
+          ><a href="nosotros.html">Nosotros</a><a href="blog.html">Blog</a
+          ><a href="contacto.html" aria-current="page">Contacto</a>
+        </nav>
+        <div class="header-actions">
+          <a class="session-link" href="login.html" data-session-label
+            >Iniciar sesión</a
+          >
+          <a class="cart-link" href="carrito.html"
+            >🛒 Carrito <span class="cart-count" data-cart-count>0</span></a
+          >
+        </div>
+      </div>
+    </header>
+    <main>
+      <section class="page-header">
+        <div class="container">
+          <span class="eyebrow">Contacto</span>
+          <h1>Envíanos un mensaje</h1>
+          <p>
+            Vista de contacto con validaciones personalizadas en JavaScript.
+          </p>
+        </div>
+      </section>
+      <section class="section">
+        <div class="container">
+          Conserva tu diseño y los mismos id, así que tu JavaScript actual
+          debería poder seguir encontrando los campos:
+
+          <form
+            id="contactForm"
+            class="content-card form-card"
+            action="https://formspree.io/f/mvkoryll"
+            method="POST"
+            novalidate
+          >
+            <div class="form-group">
+              <label for="name">Nombre</label>
+
+              <input id="name" name="name" type="text" maxlength="100" />
+
+              <span class="error-text"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="email">
+                Correo
+                <span class="help-text"> (opcional según anexo) </span>
+              </label>
+
+              <input id="email" name="email" type="email" maxlength="100" />
+
+              <span class="help-text">
+                Si se informa, debe ser @duoc.cl, @profesor.duoc.cl o
+                @gmail.com.
+              </span>
+
+              <span class="error-text"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="comment"> Comentario </label>
+
+              <textarea id="comment" name="message" maxlength="500"></textarea>
+
+              <span class="help-text"> Máximo 500 caracteres. </span>
+
+              <span class="error-text"></span>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              Enviar mensaje
+            </button>
+
+            <div class="form-message" role="status"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <h3>TCG Market</h3>
+            <p>
+              Tienda online básica de productos TCG desarrollada para la
+              Evaluación Parcial 1 de DSY1104.
+            </p>
+          </div>
+          <div>
+            <h3>Navegación</h3>
+            <p>
+              <a href="productos.html">Productos</a><br /><a
+                href="nosotros.html"
+                >Nosotros</a
+              ><br /><a href="blog.html">Blog</a>
+            </p>
+          </div>
+          <div>
+            <h3>Cuenta</h3>
+            <p>
+              <a href="registro.html">Registrarse</a><br /><a href="login.html"
+                >Iniciar sesión</a
+              ><br /><a href="contacto.html">Contacto</a>
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          Proyecto frontend desarrollado con HTML, CSS y JavaScript.
+        </div>
+      </div>
+    </footer>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/forms.js"></script>
+  </body>
+</html>

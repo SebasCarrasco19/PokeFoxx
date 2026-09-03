@@ -173,40 +173,143 @@
   }
 
   function setupContact() {
-    const form = document.getElementById('contactForm');
-    if (!form) return;
+  const form = document.getElementById('contactForm');
 
-    function validate() {
-      let valid = true;
-      let msg = required(form.elements.name, 'Nombre') || maxLength(form.elements.name, 'Nombre', 100);
-      setError(form.elements.name, msg); valid = valid && !msg;
-      msg = validateEmail(form.elements.email, false);
-      setError(form.elements.email, msg); valid = valid && !msg;
-      msg = required(form.elements.comment, 'Comentario') || maxLength(form.elements.comment, 'Comentario', 500);
-      setError(form.elements.comment, msg); valid = valid && !msg;
-      return valid;
-    }
+  if (!form) return;
 
-    setupRealtime(form, validate);
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      if (!validate()) return showFormMessage(form, 'Corrige los campos marcados antes de enviar.', 'error');
-      const messages = TCG.read(TCG_STORAGE.contacts, []);
-      messages.push({
-        name: form.elements.name.value.trim(),
-        email: form.elements.email.value.trim().toLowerCase(),
-        comment: form.elements.comment.value.trim(),
-        createdAt: new Date().toISOString()
-      });
-      TCG.write(TCG_STORAGE.contacts, messages);
-      form.reset();
-      showFormMessage(form, 'Mensaje validado y registrado internamente.', 'success');
-    });
+  function validate() {
+    let valid = true;
+
+    let msg =
+      required(form.elements.name, 'Nombre') ||
+      maxLength(form.elements.name, 'Nombre', 100);
+
+    setError(form.elements.name, msg);
+    valid = valid && !msg;
+
+
+    msg = validateEmail(form.elements.email, false);
+
+    setError(form.elements.email, msg);
+    valid = valid && !msg;
+
+
+    msg =
+      required(form.elements.comment, 'Comentario') ||
+      maxLength(form.elements.comment, 'Comentario', 500);
+
+    setError(form.elements.comment, msg);
+    valid = valid && !msg;
+
+
+    return valid;
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    setupLogin();
-    setupRegister();
-    setupContact();
+
+  setupRealtime(form, validate);
+
+
+  form.addEventListener('submit', async event => {
+
+    // Evita que la página se recargue
+    event.preventDefault();
+
+
+    // VALIDACIONES
+    if (!validate()) {
+
+      showFormMessage(
+        form,
+        'Corrige los campos marcados antes de enviar.',
+        'error'
+      );
+
+      return;
+    }
+
+
+    const button = form.querySelector(
+      'button[type="submit"]'
+    );
+
+
+    // Deshabilitar mientras se envía
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Enviando...';
+    }
+
+
+    showFormMessage(
+      form,
+      'Enviando mensaje...',
+      'success'
+    );
+
+
+    // Recoger información del formulario
+    const formData = new FormData(form);
+
+
+    try {
+
+      // ENVÍO REAL A FORMSPREE
+      const response = await fetch(
+        form.action,
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+
+      // SI EL CORREO SE ENVIÓ
+      if (response.ok) {
+
+        form.reset();
+
+        showFormMessage(
+          form,
+          'Mensaje enviado correctamente. ¡Gracias por contactarnos!',
+          'success'
+        );
+
+      } else {
+
+        showFormMessage(
+          form,
+          'No se pudo enviar el mensaje. Intenta nuevamente.',
+          'error'
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        'Error al enviar el formulario:',
+        error
+      );
+
+      showFormMessage(
+        form,
+        'Ocurrió un error al enviar el mensaje.',
+        'error'
+      );
+
+    } finally {
+
+      // Volver a habilitar botón
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Enviar mensaje';
+      }
+
+    }
+
   });
+}
 })();
