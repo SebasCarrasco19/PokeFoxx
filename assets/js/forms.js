@@ -312,4 +312,9 @@
 
   });
 }
+document.addEventListener('DOMContentLoaded', function () {
+  setupLogin();
+  setupRegister();
+  setupContact();
+});
 })();

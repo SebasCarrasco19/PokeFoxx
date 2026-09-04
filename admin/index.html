@@ -1,14 +1,61 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Inicio | Administración TCG Market</title><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../assets/css/admin.css"></head><body class="admin-body" data-root=".." data-admin="true"><div class="admin-shell"><aside class="admin-sidebar">
-  <a class="logo" href="index.html"><img src="../assets/img/logo.svg" alt="TCG Market"></a>
-  <nav class="admin-nav" aria-label="Administración">
-    <a href="index.html" aria-current="page" >Resumen</a>
-    <a href="productos.html" data-vendor-allowed>Productos</a>
-    <a href="producto-form.html" data-admin-only>Nuevo producto</a>
-    <a href="ordenes.html" data-vendor-allowed>Órdenes</a>
-    <a href="usuarios.html" data-admin-only>Usuarios</a>
-    <a href="usuario-form.html" data-admin-only>Nuevo usuario</a>
-    <div class="admin-nav-sep"></div>
-    <a href="../index.html">Volver a la tienda</a>
-  </nav>
-  <div class="admin-sidebar-bottom"><a class="btn btn-secondary" href="#" data-logout>Cerrar sesión</a></div>
-</aside><div class="admin-main"><header class="admin-topbar"><strong>Administración</strong><span data-admin-user>Usuario</span></header><main class="admin-content"><div data-dashboard><div class="admin-title"><h1>Hola, <span data-admin-user>usuario</span></h1><p>Panel principal con menú visible para las funciones administrativas.</p></div><div class="stat-grid"><article class="stat-card"><span>Productos</span><strong data-stat="products">0</strong></article><article class="stat-card" data-admin-only><span>Usuarios</span><strong data-stat="users">0</strong></article><article class="stat-card"><span>Órdenes</span><strong data-stat="orders">0</strong></article></div><section class="section"><div class="content-card"><h2>Stock crítico</h2><p>Productos cuyo stock es igual o inferior al stock crítico configurado: <strong data-stat="critical">0</strong>.</p><p class="permission-note">El menú se adapta al rol: Administrador tiene acceso total; Vendedor solo visualiza productos, detalles y órdenes.</p></div></section></div></main></div></div><script src="../assets/js/data.js"></script><script src="../assets/js/common.js"></script><script src="../assets/js/admin.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio | Administración TCG Market</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body class="admin-body" data-root=".." data-admin="true">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <a class="logo" href="index.html"><img src="../assets/img/logo.svg" alt="TCG Market"></a>
+      <nav class="admin-nav" aria-label="Administración">
+        <a href="index.html" aria-current="page">Resumen</a>
+        <a href="productos.html" data-vendor-allowed>Productos</a>
+        <a href="producto-form.html" data-admin-only>Nuevo producto</a>
+        <a href="ordenes.html" data-vendor-allowed>Órdenes</a>
+        <a href="usuarios.html" data-admin-only>Usuarios</a>
+        <a href="usuario-form.html" data-admin-only>Nuevo usuario</a>
+        <div class="admin-nav-sep"></div>
+        <a href="../index.html">Volver a la tienda</a>
+      </nav>
+      <div class="admin-sidebar-bottom"><a class="btn btn-secondary" href="#" data-logout>Cerrar sesión</a></div>
+    </aside>
+    <div class="admin-main">
+      <header class="admin-topbar"><strong>Administración</strong><span data-admin-user>Usuario</span></header>
+      <main class="admin-content">
+        <div data-dashboard>
+          <div class="admin-title">
+            <h1>Hola, <span data-admin-user>usuario</span></h1>
+            <p>Panel principal con menú visible para las funciones administrativas.</p>
+          </div>
+          <div class="stat-grid">
+            <article class="stat-card"><span>Productos</span><strong data-stat="products">0</strong></article>
+            <article class="stat-card" data-admin-only><span>Usuarios</span><strong data-stat="users">0</strong>
+            </article>
+            <article class="stat-card"><span>Órdenes</span><strong data-stat="orders">0</strong></article>
+          </div>
+          <section class="section">
+            <div class="content-card">
+              <h2>Stock crítico</h2>
+              <p>Productos cuyo stock es igual o inferior al stock crítico configurado: <strong
+                  data-stat="critical">0</strong>.</p>
+              <p class="permission-note">El menú se adapta al rol: Administrador tiene acceso total; Vendedor solo
+                visualiza productos, detalles y órdenes.</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script src="../assets/js/admin-extra.js"></script>
+</body>
+
+</html>
