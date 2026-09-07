@@ -60,7 +60,9 @@ TCGMarket_DSY1104_Evaluacion1/
 - Inicio de sesión.
 - Nosotros.
 - Blog con dos publicaciones y dos vistas de detalle.
-- Contacto.
+- Los detalles del blog incorporan videos de TikTok mediante el reproductor embebido oficial, con contenido centrado y fondo visual alrededor del video.
+- Contacto con validaciones JavaScript y envío real del mensaje por correo mediante Formspree.
+- Footer unificado en las vistas públicas con la leyenda centrada `PokeFoxx S.A © 2026`.
 
 ### Administración
 
@@ -86,6 +88,8 @@ TCGMarket_DSY1104_Evaluacion1/
 - Nombre requerido, máximo 100 caracteres.
 - Correo de máximo 100 caracteres y dominio permitido cuando se informa.
 - Comentario requerido, máximo 500 caracteres.
+- Si las validaciones son correctas, el formulario realiza un envío real mediante Formspree.
+- Durante el envío se deshabilita temporalmente el botón y se informa al usuario si el mensaje fue enviado correctamente o si ocurrió un error.
 
 ### Usuario
 
@@ -116,7 +120,8 @@ TCGMarket_DSY1104_Evaluacion1/
 - Añadir productos desde el listado y desde el detalle.
 - Si un producto ya existe, aumenta su cantidad.
 - La cantidad mínima es 1 y no puede superar el stock disponible.
-- Permite aumentar, disminuir y eliminar productos.
+- Permite aumentar, disminuir y eliminar productos individualmente.
+- Incluye un botón **Vaciar carrito** que solicita confirmación antes de eliminar todos los productos de una sola vez.
 - Calcula el total.
 - Guarda el carrito en `localStorage`.
 
@@ -133,6 +138,17 @@ El Administrador tiene acceso total. El Vendedor visualiza productos, detalles y
 ## Nota sobre regiones y comunas
 
 El anexo indica que las regiones y comunas deben provenir de un **arreglo JavaScript complementario al entregable**, pero ese arreglo no fue incluido entre los archivos entregados en esta conversación. Para que el comportamiento pueda probarse, `assets/js/data.js` contiene un arreglo demostrativo de regiones y comunas. Cuando el docente entregue el arreglo oficial, solo es necesario reemplazar `TCG_REGIONS`.
+
+## Cambios recientes
+
+- Se añadió la opción **Vaciar carrito** para eliminar todos los productos de forma directa, manteniendo la eliminación individual existente.
+- Se integraron videos de TikTok en `blog-detalle-1.html` y `blog-detalle-2.html` utilizando URLs del reproductor `player/v1`.
+- Las vistas de detalle del blog comparten una estructura central con ancho controlado para alinear título, video y texto, evitando que los párrafos se expandan a todo el ancho de la pantalla.
+- Se agregó un fondo visual alrededor de los videos para aprovechar el espacio lateral del formato vertical de TikTok.
+- El formulario de contacto dejó de registrar mensajes solo localmente y ahora realiza un envío real por correo mediante Formspree, conservando las validaciones exigidas por el proyecto.
+- El pie de página fue actualizado con la leyenda centrada **PokeFoxx S.A © 2026**.
+
+> Los videos de TikTok y el envío mediante Formspree requieren conexión a Internet para funcionar correctamente.
 
 ## GitHub
 

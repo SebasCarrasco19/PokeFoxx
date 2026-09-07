@@ -301,20 +301,62 @@ textarea { min-height: 130px; resize: vertical; }
 }
 
 
-.tiktok-container {
-    display: flex;
-    justify-content: center;
-    width: fit-content;
-    margin: 30px auto;
+.tiktok-video-grande {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    padding: 12px;
+.tiktok-video-grande iframe {
+  width: 320px;
+  height: 570px;
 
-    border: 3px solid #f25aa3;
-    border-radius: 20px;
+  border: 3px solid #6c38d9;
+  border-radius: 18px;
 
-    background: #ffffff;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(108, 56, 217, 0.35);
 
-    box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.15),
-        0 0 18px rgba(242, 90, 163, 0.25);
+  background: #000;
+}
+
+.video-showcase {
+  width: 100%;
+  max-width: 900px;
+  min-height: 620px;
+
+  margin: 30px auto;
+  padding: 25px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-image:
+    linear-gradient(
+      rgba(20, 10, 45, 0.15),
+      rgba(20, 10, 45, 0.15)
+    ),
+    url("../img/fondo-estadio.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.blog-detail-container {
+  width: calc(100% - 40px);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.blog-detail-text {
+  width: 100%;
+  line-height: 1.7;
 }
