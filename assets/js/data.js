@@ -16,7 +16,7 @@ const TCG_CATEGORIES = [
   'Cajas'
 ];
 
-// Juegos TCG usados para filtrar el catálogo público.
+
 const TCG_GAMES = [
   'Pokémon',
   'One Piece',
@@ -39,9 +39,6 @@ const TCG_SEED_PRODUCTS = [
 ];
 
 
-// El Anexo 1 indica que regiones y comunas deben provenir de un arreglo JavaScript complementario.
-// Ese arreglo no fue incluido entre los anexos recibidos. Se incluye este arreglo demostrativo para
-// implementar y probar la dependencia Región -> Comuna. Puede reemplazarse por el arreglo oficial.
 const TCG_REGIONS = [
   { region: 'Región Metropolitana', communes: ['Santiago', 'Providencia', 'Maipú'] },
   { region: 'Región de Valparaíso', communes: ['Valparaíso', 'Viña del Mar', 'Quilpué'] },
