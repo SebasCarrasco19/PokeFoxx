@@ -1,5 +1,13 @@
 import { Routes, Route } from 'react-router-dom'
 
+import Perfil from './pages/Perfil'
+import PagoCorrecto from './pages/PagoCorrecto'
+import PagoError from './pages/PagoError'
+import Checkout from './pages/Checkout'
+import Carrito from './pages/Carrito'
+import BlogDetalle1 from './pages/BlogDetalle1'
+import BlogDetalle2 from './pages/BlogDetalle2'
+import Blog from './pages/Blog'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -18,6 +26,14 @@ function App() {
       <Header />
 
       <Routes>
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/pago-correcto" element={<PagoCorrecto />} />
+        <Route path="/pago-error" element={<PagoError />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/carrito" element={<Carrito />} />
+        <Route path="/blog/1" element={<BlogDetalle1 />} />
+        <Route path="/blog/2" element={<BlogDetalle2 />} />
+        <Route path="/blog" element={<Blog />}/>
         <Route path="/" element={<Home />} />
         <Route path="/productos" element={<Productos />} />
         <Route path="/producto/:id" element={<DetalleProducto />} />

@@ -1,47 +1,126 @@
+import { useState } from 'react'
+
 function Contacto() {
+
+  const [nombre, setNombre] = useState('')
+  const [correo, setCorreo] = useState('')
+  const [mensaje, setMensaje] = useState('')
+
+  function manejarSubmit(event) {
+    event.preventDefault()
+  }
+
   return (
-    <main className="container mt-5">
-      <h1>Contacto</h1>
+    <main>
 
-      <p>Envíanos tus consultas.</p>
+      <section className="page-header">
 
-      <form className="mt-4">
+        <div className="container">
 
-        <div className="mb-3">
-          <label className="form-label">Nombre</label>
+          <span className="eyebrow">
+            Contacto
+          </span>
 
-          <input
-            type="text"
-            className="form-control"
-          />
+          <h1>
+            Contáctanos
+          </h1>
+
+          <p>
+            ¿Tienes alguna consulta? Envíanos un mensaje
+            y estaremos encantados de ayudarte.
+          </p>
+
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Correo</label>
+      </section>
 
-          <input
-            type="email"
-            className="form-control"
-          />
+
+      <section className="section">
+
+        <div className="container">
+
+          <form
+            className="content-card form-card"
+            onSubmit={manejarSubmit}
+          >
+
+            <div className="form-grid">
+
+              <div className="form-group">
+
+                <label htmlFor="nombre">
+                  Nombre
+                </label>
+
+                <input
+                  id="nombre"
+                  type="text"
+                  value={nombre}
+                  onChange={event =>
+                    setNombre(event.target.value)
+                  }
+                  maxLength="100"
+                />
+
+              </div>
+
+
+              <div className="form-group">
+
+                <label htmlFor="correo">
+                  Correo
+                </label>
+
+                <input
+                  id="correo"
+                  type="email"
+                  value={correo}
+                  onChange={event =>
+                    setCorreo(event.target.value)
+                  }
+                  maxLength="100"
+                />
+
+              </div>
+
+
+              <div className="form-group full">
+
+                <label htmlFor="mensaje">
+                  Mensaje
+                </label>
+
+                <textarea
+                  id="mensaje"
+                  value={mensaje}
+                  onChange={event =>
+                    setMensaje(event.target.value)
+                  }
+                  maxLength="500"
+                />
+
+              </div>
+
+
+              <div className="form-group full">
+
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                >
+                  Enviar mensaje
+                </button>
+
+              </div>
+
+            </div>
+
+          </form>
+
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Mensaje</label>
+      </section>
 
-          <textarea
-            className="form-control"
-            rows="5"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="btn btn-primary"
-        >
-          Enviar
-        </button>
-
-      </form>
     </main>
   )
 }
