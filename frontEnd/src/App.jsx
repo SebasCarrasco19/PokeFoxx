@@ -19,6 +19,8 @@ import Nosotros from './pages/Nosotros'
 import Contacto from './pages/Contacto'
 import Categorias from './pages/Categorias'
 import CategoriaProductos from './pages/CategoriaProductos'
+import Ofertas from './pages/Ofertas'
+import ProductosCriticos from './pages/ProductosCriticos'
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/categorias" element={<Categorias />} />
         <Route path="/categorias/:categoria" element={<CategoriaProductos />} />
+        <Route path="/ofertas" element={<Ofertas />} />
+        <Route path="/admin/productos-criticos" element={<ProductosCriticos />} />
       </Routes>
 
       <Footer />

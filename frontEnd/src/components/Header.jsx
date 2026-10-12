@@ -60,7 +60,14 @@ function Header() {
           >
             Categorías
           </NavLink>
-          
+
+          <NavLink
+            to="/ofertas"
+            onClick={cerrarMenu}
+          >
+            Ofertas
+          </NavLink>
+
           <NavLink
             to="/nosotros"
             onClick={cerrarMenu}
