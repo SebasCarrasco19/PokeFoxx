@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import CartItem from '../components/CartItem'
 
 function Carrito() {
 
-  const [carrito, setCarrito] = useState([
+  const carrito = [
     {
       id: 1,
       name: 'Ascended Heroes Booster Pack',
@@ -23,59 +22,7 @@ function Carrito() {
       category: 'Cartas individuales',
       image: '/assets/img/doffy.png'
     }
-  ])
-
-  function aumentar(id) {
-    setCarrito(
-      carrito.map(item => {
-        if (
-          item.id === id &&
-          item.cantidad < item.stock
-        ) {
-          return {
-            ...item,
-            cantidad: item.cantidad + 1
-          }
-        }
-
-        return item
-      })
-    )
-  }
-
-  function disminuir(id) {
-    setCarrito(
-      carrito.map(item => {
-        if (item.id === id) {
-          return {
-            ...item,
-            cantidad: Math.max(
-              1,
-              item.cantidad - 1
-            )
-          }
-        }
-
-        return item
-      })
-    )
-  }
-
-  function eliminar(id) {
-    setCarrito(
-      carrito.filter(item => item.id !== id)
-    )
-  }
-
-  function vaciarCarrito() {
-    const confirmar = window.confirm(
-      '¿Estás seguro de que quieres vaciar todo el carrito?'
-    )
-
-    if (confirmar) {
-      setCarrito([])
-    }
-  }
+  ]
 
   const total = carrito.reduce(
     (acumulador, item) =>
@@ -123,9 +70,6 @@ function Carrito() {
                 <CartItem
                   key={item.id}
                   item={item}
-                  aumentar={aumentar}
-                  disminuir={disminuir}
-                  eliminar={eliminar}
                 />
               ))
 
@@ -195,7 +139,7 @@ function Carrito() {
             <button
               className="btn btn-danger cart-pay"
               type="button"
-              onClick={vaciarCarrito}
+              disabled title="Disponible en una próxima etapa"
             >
               Vaciar carrito
             </button>

@@ -1,43 +1,10 @@
+import { productosIniciales as productos } from '../data/adminData'
 import { Link, useParams } from 'react-router-dom'
 
 function DetalleProducto() {
 
   const { id } = useParams()
 
-  const productos = [
-    {
-      id: 1,
-      nombre: 'Pikachu',
-      precio: 15000,
-      stock: 5,
-      categoria: 'Pokémon',
-      descripcion: 'Carta coleccionable de Pokémon.'
-    },
-    {
-      id: 2,
-      nombre: 'Monkey D. Luffy',
-      precio: 25000,
-      stock: 10,
-      categoria: 'One Piece',
-      descripcion: 'Carta coleccionable de One Piece.'
-    },
-    {
-      id: 3,
-      nombre: 'Starter Deck',
-      precio: 18990,
-      stock: 6,
-      categoria: 'Mazos',
-      descripcion: 'Mazo inicial preparado para comenzar a jugar.'
-    },
-    {
-      id: 4,
-      nombre: 'Protectores TCG',
-      precio: 6990,
-      stock: 30,
-      categoria: 'Accesorios',
-      descripcion: 'Protectores para mantener tus cartas en buen estado.'
-    }
-  ]
 
   const producto = productos.find(
     producto => producto.id === Number(id)
@@ -80,7 +47,7 @@ function DetalleProducto() {
             {' / '}
             <Link to="/productos">Productos</Link>
             {' / '}
-            {producto.nombre}
+            {producto.name}
           </div>
 
         </div>
@@ -96,9 +63,7 @@ function DetalleProducto() {
 
             <div className="product-detail-media">
 
-              <div className="empty-state">
-                Imagen del producto
-              </div>
+              <img src={producto.image} alt={producto.name} />
 
             </div>
 
@@ -106,19 +71,19 @@ function DetalleProducto() {
             <div className="product-detail-info">
 
               <span className="eyebrow">
-                {producto.categoria}
+                {producto.category}
               </span>
 
               <h1>
-                {producto.nombre}
+                {producto.name}
               </h1>
 
               <p>
-                {producto.descripcion}
+                {producto.description}
               </p>
 
               <div className="price-large">
-                ${producto.precio.toLocaleString('es-CL')}
+                ${producto.price.toLocaleString('es-CL')}
               </div>
 
               <p className="stock">

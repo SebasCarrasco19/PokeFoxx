@@ -84,12 +84,7 @@ function Perfil() {
               <strong>Dirección:</strong> {usuario.direccion}
             </p>
 
-            <button
-              className="btn btn-primary"
-              type="button"
-            >
-              Editar perfil
-            </button>
+            <Link className="btn btn-primary" to="/editar-perfil">Editar perfil</Link>
 
           </div>
 

@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import CheckoutForm from '../components/CheckoutForm'
 
 function Checkout() {
 
-  const navigate = useNavigate()
 
   const [datos, setDatos] = useState({
     nombre: '',
@@ -31,7 +30,7 @@ function Checkout() {
 
     event.preventDefault()
 
-    navigate('/pago-correcto')
+
 
   }
 
@@ -64,11 +63,13 @@ function Checkout() {
 
         <div className="container">
 
+<p>Vista de demostración. No procesa pagos ni genera órdenes.</p>
           <CheckoutForm
             datos={datos}
             cambiarDato={cambiarDato}
             enviarCompra={enviarCompra}
           />
+          <div className="hero-actions"><Link className="btn btn-secondary" to="/pago-correcto">Ver ejemplo de pago correcto</Link><Link className="btn btn-secondary" to="/pago-error">Ver ejemplo de pago con error</Link></div>
 
         </div>
 

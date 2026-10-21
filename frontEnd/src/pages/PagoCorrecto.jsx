@@ -19,11 +19,11 @@ function PagoCorrecto() {
             </h1>
 
             <p>
-              Tu compra fue procesada de manera exitosa.
+              Ejemplo visual de compra exitosa. No se ha realizado ningún pago.
             </p>
 
             <p>
-              Gracias por comprar en PokeFoxx.
+              Resumen de ejemplo: 2 productos · Total $15.490.
             </p>
 
             <div className="hero-actions">

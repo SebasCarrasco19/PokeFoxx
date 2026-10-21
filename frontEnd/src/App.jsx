@@ -1,33 +1,49 @@
-import { Routes, Route } from 'react-router-dom'
+import EditarPerfil from './pages/EditarPerfil'
+import PedidoDetalle from './pages/PedidoDetalle'
+import NoEncontrado from './pages/NoEncontrado'
+import AdminCategorias from './pages/admin/AdminCategorias'
+import AdminCategoriaForm from './pages/admin/AdminCategoriaForm'
+import AdminReportes from './pages/admin/AdminReportes'
+import AdminPerfil from './pages/admin/AdminPerfil'
+import AdminProductoDetalle from './pages/admin/AdminProductoDetalle'
+import AdminUsuarioDetalle from './pages/admin/AdminUsuarioDetalle'
+import AdminUsuarioHistorial from './pages/admin/AdminUsuarioHistorial'
+import { Route, Routes } from 'react-router-dom'
 
-import Perfil from './pages/Perfil'
-import PagoCorrecto from './pages/PagoCorrecto'
-import PagoError from './pages/PagoError'
-import Checkout from './pages/Checkout'
-import Carrito from './pages/Carrito'
+import AdminLayout from './layouts/AdminLayout'
+import TiendaLayout from './layouts/TiendaLayout'
+
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminOrdenDetalle from './pages/admin/AdminOrdenDetalle'
+import AdminOrdenes from './pages/admin/AdminOrdenes'
+import AdminProductoForm from './pages/admin/AdminProductoForm'
+import AdminProductos from './pages/admin/AdminProductos'
+import AdminUsuarioForm from './pages/admin/AdminUsuarioForm'
+import AdminUsuarios from './pages/admin/AdminUsuarios'
+import Blog from './pages/Blog'
 import BlogDetalle1 from './pages/BlogDetalle1'
 import BlogDetalle2 from './pages/BlogDetalle2'
-import Blog from './pages/Blog'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Home from './pages/Home'
-import Productos from './pages/Productos'
+import Carrito from './pages/Carrito'
+import CategoriaProductos from './pages/CategoriaProductos'
+import Categorias from './pages/Categorias'
+import Checkout from './pages/Checkout'
+import Contacto from './pages/Contacto'
 import DetalleProducto from './pages/DetalleProducto'
-import Registro from './pages/Registro'
+import Home from './pages/Home'
 import Login from './pages/Login'
 import Nosotros from './pages/Nosotros'
-import Contacto from './pages/Contacto'
-import Categorias from './pages/Categorias'
-import CategoriaProductos from './pages/CategoriaProductos'
 import Ofertas from './pages/Ofertas'
-import ProductosCriticos from './pages/ProductosCriticos'
+import PagoCorrecto from './pages/PagoCorrecto'
+import PagoError from './pages/PagoError'
+import Perfil from './pages/Perfil'
+import Productos from './pages/Productos'
+import ProductosCriticos from './pages/admin/ProductosCriticos'
+import Registro from './pages/Registro'
 
 function App() {
   return (
-    <>
-      <Header />
-
-      <Routes>
+    <Routes>
+      <Route element={<TiendaLayout />}>
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/pago-correcto" element={<PagoCorrecto />} />
         <Route path="/pago-error" element={<PagoError />} />
@@ -35,7 +51,7 @@ function App() {
         <Route path="/carrito" element={<Carrito />} />
         <Route path="/blog/1" element={<BlogDetalle1 />} />
         <Route path="/blog/2" element={<BlogDetalle2 />} />
-        <Route path="/blog" element={<Blog />}/>
+        <Route path="/blog" element={<Blog />} />
         <Route path="/" element={<Home />} />
         <Route path="/productos" element={<Productos />} />
         <Route path="/producto/:id" element={<DetalleProducto />} />
@@ -46,11 +62,36 @@ function App() {
         <Route path="/categorias" element={<Categorias />} />
         <Route path="/categorias/:categoria" element={<CategoriaProductos />} />
         <Route path="/ofertas" element={<Ofertas />} />
-        <Route path="/admin/productos-criticos" element={<ProductosCriticos />} />
-      </Routes>
 
-      <Footer />
-    </>
+        <Route path="/editar-perfil" element={<EditarPerfil />} />
+        <Route path="/pedido/:id" element={<PedidoDetalle />} />
+        <Route path="*" element={<NoEncontrado />} />
+      </Route>
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="categorias" element={<AdminCategorias />} />
+        <Route path="categorias/nueva" element={<AdminCategoriaForm />} />
+        <Route path="categorias/:id/editar" element={<AdminCategoriaForm />} />
+        <Route path="reportes" element={<AdminReportes />} />
+        <Route path="perfil" element={<AdminPerfil />} />
+        <Route path="productos/:id" element={<AdminProductoDetalle />} />
+        <Route path="usuarios/:run" element={<AdminUsuarioDetalle />} />
+        <Route
+          path="usuarios/:run/historial"
+          element={<AdminUsuarioHistorial />}
+        />
+        <Route path="*" element={<NoEncontrado />} />
+        <Route index element={<AdminDashboard />} />
+        <Route path="productos" element={<AdminProductos />} />
+        <Route path="productos/nuevo" element={<AdminProductoForm />} />
+        <Route path="productos/:id/editar" element={<AdminProductoForm />} />
+        <Route path="productos-criticos" element={<ProductosCriticos />} />
+        <Route path="usuarios" element={<AdminUsuarios />} />
+        <Route path="usuarios/nuevo" element={<AdminUsuarioForm />} />
+        <Route path="usuarios/:run/editar" element={<AdminUsuarioForm />} />
+        <Route path="ordenes" element={<AdminOrdenes />} />
+        <Route path="ordenes/:id" element={<AdminOrdenDetalle />} />
+      </Route>
+    </Routes>
   )
 }
 
