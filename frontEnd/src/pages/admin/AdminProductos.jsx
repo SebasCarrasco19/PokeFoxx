@@ -4,7 +4,7 @@ import { productosIniciales } from '../../data/adminData'
 
 function AdminProductos() {
 
-  const [productos] = useState(() => {
+  const [productos, setProductos] = useState(() => {
 
     const productosGuardados = localStorage.getItem('productos')
 
@@ -20,15 +20,53 @@ function AdminProductos() {
     return productosIniciales
   })
 
+
+  function eliminarProducto(id) {
+
+    const confirmar = window.confirm(
+      '¿Seguro que quieres eliminar este producto?'
+    )
+
+    if (!confirmar) {
+      return
+    }
+
+
+    const productosActualizados = productos.filter(
+      producto => producto.id !== id
+    )
+
+
+    setProductos(productosActualizados)
+
+
+    localStorage.setItem(
+      'productos',
+      JSON.stringify(productosActualizados)
+    )
+  }
+
+
   return (
     <>
       <div className="admin-title">
-        <h1>Productos</h1>
-        <p>Listado de productos disponibles en la tienda.</p>
+
+        <h1>
+          Productos
+        </h1>
+
+        <p>
+          Listado de productos disponibles en la tienda.
+        </p>
+
       </div>
 
+
       <div className="admin-toolbar">
-        <span>{productos.length} producto(s) registrados.</span>
+
+        <span>
+          {productos.length} producto(s) registrados.
+        </span>
 
         <Link
           className="btn btn-primary"
@@ -36,13 +74,16 @@ function AdminProductos() {
         >
           Nuevo producto
         </Link>
+
       </div>
+
 
       <div className="table-wrap">
 
         <table>
 
           <thead>
+
             <tr>
               <th>Código</th>
               <th>Nombre</th>
@@ -51,25 +92,35 @@ function AdminProductos() {
               <th>Stock</th>
               <th>Acciones</th>
             </tr>
+
           </thead>
+
 
           <tbody>
 
-            {productos.map((producto) => (
+            {productos.map(producto => (
 
               <tr key={producto.id}>
 
-                <td>{producto.code}</td>
+                <td>
+                  {producto.code}
+                </td>
 
-                <td>{producto.name}</td>
+                <td>
+                  {producto.name}
+                </td>
 
-                <td>{producto.category}</td>
+                <td>
+                  {producto.category}
+                </td>
 
                 <td>
                   ${Number(producto.price).toLocaleString('es-CL')}
                 </td>
 
-                <td>{producto.stock}</td>
+                <td>
+                  {producto.stock}
+                </td>
 
                 <td>
 
@@ -82,11 +133,11 @@ function AdminProductos() {
                       Ver detalle
                     </Link>
 
+
                     <button
                       className="btn btn-danger btn-sm"
                       type="button"
-                      disabled
-                      title="Disponible en una próxima etapa"
+                      onClick={() => eliminarProducto(producto.id)}
                     >
                       Eliminar
                     </button>
