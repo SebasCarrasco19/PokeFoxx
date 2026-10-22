@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import {
+  Link,
+  NavLink,
+  useLocation
+} from 'react-router-dom'
 
 function Header() {
 
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const [cantidadCarrito, setCantidadCarrito] = useState(0)
+
+  const [cantidadCarrito, setCantidadCarrito] =
+    useState(0)
+
+  const [sesion, setSesion] =
+    useState(null)
+
+  const location = useLocation()
 
 
   function cerrarMenu() {
+
     setMenuAbierto(false)
   }
 
@@ -19,7 +31,8 @@ function Header() {
 
     const cantidad = carrito.reduce(
       (total, item) =>
-        total + (item.quantity ?? item.cantidad ?? 1),
+        total +
+        (item.quantity ?? item.cantidad ?? 1),
       0
     )
 
@@ -27,16 +40,39 @@ function Header() {
   }
 
 
+  function actualizarSesion() {
+
+    const sesionGuardada =
+      JSON.parse(localStorage.getItem('sesion'))
+
+    setSesion(sesionGuardada)
+  }
+
+
+  function cerrarSesion() {
+
+    localStorage.removeItem('sesion')
+
+    setSesion(null)
+
+    cerrarMenu()
+  }
+
+
   useEffect(() => {
 
     actualizarCarrito()
+    actualizarSesion()
+
 
     window.addEventListener(
       'carritoActualizado',
       actualizarCarrito
     )
 
+
     return () => {
+
       window.removeEventListener(
         'carritoActualizado',
         actualizarCarrito
@@ -44,6 +80,14 @@ function Header() {
     }
 
   }, [])
+
+
+  useEffect(() => {
+
+    actualizarSesion()
+    actualizarCarrito()
+
+  }, [location.pathname])
 
 
   return (
@@ -56,10 +100,12 @@ function Header() {
           to="/"
           onClick={cerrarMenu}
         >
+
           <img
             src="/assets/img/logo.svg"
             alt="PokeFoxx"
           />
+
         </Link>
 
 
@@ -67,14 +113,18 @@ function Header() {
           className="nav-toggle"
           type="button"
           aria-label="Abrir menú"
-          onClick={() => setMenuAbierto(!menuAbierto)}
+          onClick={() =>
+            setMenuAbierto(!menuAbierto)
+          }
         >
           ☰
         </button>
 
 
         <nav
-          className={`main-nav ${menuAbierto ? 'open' : ''}`}
+          className={`main-nav ${
+            menuAbierto ? 'open' : ''
+          }`}
           aria-label="Navegación principal"
         >
 
@@ -86,12 +136,14 @@ function Header() {
             Inicio
           </NavLink>
 
+
           <NavLink
             to="/productos"
             onClick={cerrarMenu}
           >
             Productos
           </NavLink>
+
 
           <NavLink
             to="/categorias"
@@ -100,12 +152,14 @@ function Header() {
             Categorías
           </NavLink>
 
+
           <NavLink
             to="/ofertas"
             onClick={cerrarMenu}
           >
             Ofertas
           </NavLink>
+
 
           <NavLink
             to="/nosotros"
@@ -114,12 +168,14 @@ function Header() {
             Nosotros
           </NavLink>
 
+
           <NavLink
             to="/blog"
             onClick={cerrarMenu}
           >
             Blog
           </NavLink>
+
 
           <NavLink
             to="/contacto"
@@ -133,17 +189,62 @@ function Header() {
 
         <div className="header-actions">
 
-          <Link
-            className="session-link"
-            to="/login"
-          >
-            Iniciar sesión
-          </Link>
+          {!sesion ? (
+
+            <Link
+              className="session-link"
+              to="/login"
+              onClick={cerrarMenu}
+            >
+              Iniciar sesión
+            </Link>
+
+          ) : (
+
+            <>
+
+              {sesion.role === 'Cliente' ? (
+
+                <Link
+                  className="session-link"
+                  to="/perfil"
+                  onClick={cerrarMenu}
+                >
+                  Mi perfil
+                </Link>
+
+              ) : (
+
+                <Link
+                  className="session-link"
+                  to="/admin"
+                  onClick={cerrarMenu}
+                >
+                  Administración
+                </Link>
+
+              )}
+
+
+              <Link
+                className="session-link"
+                to="/"
+                onClick={cerrarSesion}
+              >
+                Cerrar sesión
+              </Link>
+
+            </>
+
+          )}
+
 
           <Link
             className="cart-link"
             to="/carrito"
+            onClick={cerrarMenu}
           >
+
             🛒 Carrito{' '}
 
             <span className="cart-count">

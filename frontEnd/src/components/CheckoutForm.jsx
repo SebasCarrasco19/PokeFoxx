@@ -1,7 +1,8 @@
 function CheckoutForm({
   datos,
   cambiarDato,
-  enviarCompra
+  enviarCompra,
+  usuario
 }) {
   return (
     <form
@@ -11,79 +12,86 @@ function CheckoutForm({
 
       <div className="form-grid">
 
-        <div className="form-group">
 
-          <label htmlFor="nombre">
-            Nombre
-          </label>
+        {!usuario && (
+          <>
 
-          <input
-            id="nombre"
-            name="nombre"
-            type="text"
-            value={datos.nombre}
-            onChange={cambiarDato}
-            required
-          />
+            <div className="form-group">
 
-        </div>
+              <label htmlFor="nombre">
+                Nombre
+              </label>
+
+              <input
+                id="nombre"
+                name="nombre"
+                type="text"
+                value={datos.nombre}
+                onChange={cambiarDato}
+                required
+              />
+
+            </div>
 
 
-        <div className="form-group">
+            <div className="form-group">
 
-          <label htmlFor="correo">
-            Correo
-          </label>
+              <label htmlFor="correo">
+                Correo
+              </label>
 
-          <input
-            id="correo"
-            name="correo"
-            type="email"
-            value={datos.correo}
-            onChange={cambiarDato}
-            required
-          />
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                value={datos.correo}
+                onChange={cambiarDato}
+                required
+              />
 
-        </div>
+            </div>
+
+
+            <div className="form-group full">
+
+              <label htmlFor="direccion">
+                Dirección
+              </label>
+
+              <input
+                id="direccion"
+                name="direccion"
+                type="text"
+                value={datos.direccion}
+                onChange={cambiarDato}
+                required
+              />
+
+            </div>
+
+
+            <div className="form-group">
+
+              <label htmlFor="comuna">
+                Comuna
+              </label>
+
+              <input
+                id="comuna"
+                name="comuna"
+                type="text"
+                value={datos.comuna}
+                onChange={cambiarDato}
+                required
+              />
+
+            </div>
+
+          </>
+        )}
 
 
         <div className="form-group full">
-
-          <label htmlFor="direccion">
-            Dirección
-          </label>
-
-          <input
-            id="direccion"
-            name="direccion"
-            type="text"
-            value={datos.direccion}
-            onChange={cambiarDato}
-            required
-          />
-
-        </div>
-
-
-        <div className="form-group">
-
-          <label htmlFor="comuna">
-            Comuna
-          </label>
-
-          <input
-            id="comuna"
-            name="comuna"
-            type="text"
-            value={datos.comuna}
-            onChange={cambiarDato}
-            required
-          />
-
-        </div>
-
-
-        <div className="form-group">
 
           <label htmlFor="metodoPago">
             Método de pago

@@ -1,10 +1,107 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { usuariosIniciales, regiones } from '../data/adminData'
 
 function Registro() {
 
-  function manejarSubmit(event) {
-    event.preventDefault()
+  const navigate = useNavigate()
+
+  const [regionSeleccionada, setRegionSeleccionada] = useState('')
+  const [comunaSeleccionada, setComunaSeleccionada] = useState('')
+
+  const [mensaje, setMensaje] = useState('')
+  const [tipoMensaje, setTipoMensaje] = useState('')
+
+
+  const comunas =
+    regiones.find(
+      item => item.region === regionSeleccionada
+    )?.comunas ?? []
+
+
+  function cambiarRegion(event) {
+
+    setRegionSeleccionada(event.target.value)
+    setComunaSeleccionada('')
   }
+
+
+  function manejarSubmit(event) {
+
+    event.preventDefault()
+
+    const formulario = new FormData(event.target)
+
+    const usuarios =
+      JSON.parse(localStorage.getItem('usuarios')) ||
+      usuariosIniciales
+
+
+    const run = formulario.get('run')
+    const email = formulario.get('email')
+
+
+    const runExiste = usuarios.some(
+      usuario => usuario.run === run
+    )
+
+    if (runExiste) {
+
+      setTipoMensaje('error')
+      setMensaje('Ya existe una cuenta con ese RUN.')
+
+      return
+    }
+
+
+    const correoExiste = usuarios.some(
+      usuario => usuario.email === email
+    )
+
+    if (correoExiste) {
+
+      setTipoMensaje('error')
+      setMensaje('Ya existe una cuenta con ese correo.')
+
+      return
+    }
+
+
+    const nuevoUsuario = {
+      run: run,
+      firstName: formulario.get('firstName'),
+      lastName: formulario.get('lastName'),
+      email: email,
+      birthDate: formulario.get('birthDate'),
+      password: formulario.get('password'),
+      role: 'Cliente',
+      region: regionSeleccionada,
+      commune: comunaSeleccionada,
+      address: formulario.get('address'),
+    }
+
+
+    const usuariosActualizados = [
+      ...usuarios,
+      nuevoUsuario
+    ]
+
+
+    localStorage.setItem(
+      'usuarios',
+      JSON.stringify(usuariosActualizados)
+    )
+
+
+    setTipoMensaje('success')
+    setMensaje('Cuenta creada correctamente. Ahora puedes iniciar sesión.')
+
+
+    setTimeout(() => {
+      navigate('/login')
+    }, 1500)
+  }
+
 
   return (
     <main>
@@ -17,7 +114,9 @@ function Registro() {
             Mi cuenta
           </span>
 
-          <h1>Crear cuenta</h1>
+          <h1>
+            Crear cuenta
+          </h1>
 
           <p>
             Regístrate como cliente de PokeFoxx.
@@ -39,6 +138,7 @@ function Registro() {
 
             <div className="form-grid">
 
+
               <div className="form-group">
 
                 <label htmlFor="run">
@@ -52,6 +152,7 @@ function Registro() {
                   minLength="7"
                   maxLength="9"
                   placeholder="19011022K"
+                  required
                 />
 
                 <span className="help-text">
@@ -71,6 +172,7 @@ function Registro() {
                   id="birthDate"
                   name="birthDate"
                   type="date"
+                  required
                 />
 
               </div>
@@ -87,6 +189,7 @@ function Registro() {
                   name="firstName"
                   type="text"
                   maxLength="50"
+                  required
                 />
 
               </div>
@@ -103,6 +206,7 @@ function Registro() {
                   name="lastName"
                   type="text"
                   maxLength="100"
+                  required
                 />
 
               </div>
@@ -119,6 +223,7 @@ function Registro() {
                   name="email"
                   type="email"
                   maxLength="100"
+                  required
                 />
 
               </div>
@@ -136,6 +241,7 @@ function Registro() {
                   type="password"
                   minLength="4"
                   maxLength="10"
+                  required
                 />
 
               </div>
@@ -150,23 +256,25 @@ function Registro() {
                 <select
                   id="region"
                   name="region"
-                  defaultValue=""
+                  value={regionSeleccionada}
+                  onChange={cambiarRegion}
+                  required
                 >
+
                   <option value="">
                     Selecciona una región
                   </option>
 
-                  <option value="Región Metropolitana">
-                    Región Metropolitana
-                  </option>
+                  {regiones.map(item => (
 
-                  <option value="Región del Biobío">
-                    Región del Biobío
-                  </option>
+                    <option
+                      key={item.region}
+                      value={item.region}
+                    >
+                      {item.region}
+                    </option>
 
-                  <option value="Región de Valparaíso">
-                    Región de Valparaíso
-                  </option>
+                  ))}
 
                 </select>
 
@@ -182,23 +290,28 @@ function Registro() {
                 <select
                   id="commune"
                   name="commune"
-                  defaultValue=""
+                  value={comunaSeleccionada}
+                  onChange={event =>
+                    setComunaSeleccionada(event.target.value)
+                  }
+                  disabled={!regionSeleccionada}
+                  required
                 >
+
                   <option value="">
                     Selecciona una comuna
                   </option>
 
-                  <option value="Santiago">
-                    Santiago
-                  </option>
+                  {comunas.map(comuna => (
 
-                  <option value="Maipú">
-                    Maipú
-                  </option>
+                    <option
+                      key={comuna}
+                      value={comuna}
+                    >
+                      {comuna}
+                    </option>
 
-                  <option value="Concepción">
-                    Concepción
-                  </option>
+                  ))}
 
                 </select>
 
@@ -216,9 +329,29 @@ function Registro() {
                   name="address"
                   type="text"
                   maxLength="300"
+                  required
                 />
 
               </div>
+
+
+              {mensaje && (
+
+                <div className="form-group full">
+
+                  <div className={`form-message ${tipoMensaje}`}>
+
+                    {tipoMensaje === 'success' ? '✅' : '⚠️'}
+
+                    {' '}
+
+                    {mensaje}
+
+                  </div>
+
+                </div>
+
+              )}
 
 
               <div className="form-group full">
@@ -242,11 +375,13 @@ function Registro() {
                 marginBottom: 0
               }}
             >
+
               ¿Ya tienes una cuenta?{' '}
 
               <Link to="/login">
                 Inicia sesión
               </Link>
+
             </p>
 
           </form>

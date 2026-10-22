@@ -1,30 +1,74 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import {
+  usuariosIniciales,
+  ordenesIniciales
+} from '../data/adminData'
 
 function Perfil() {
 
-  const usuario = {
-    nombre: 'Cliente Demo',
-    correo: 'cliente@gmail.com',
-    run: '19011022K',
-    region: 'Región Metropolitana',
-    comuna: 'Santiago',
-    direccion: 'Av. Siempre Viva 123'
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion')
+  )
+
+
+  if (!sesion) {
+    return <Navigate to="/login" />
   }
 
-  const pedidos = [
-    {
-      id: 'ORD-001',
-      fecha: '10/10/2026',
-      total: 15490,
-      estado: 'Pendiente'
-    },
-    {
-      id: 'ORD-002',
-      fecha: '05/10/2026',
-      total: 23990,
-      estado: 'Entregado'
-    }
-  ]
+
+  const usuarios =
+    JSON.parse(localStorage.getItem('usuarios')) ||
+    usuariosIniciales
+
+
+  const usuario = usuarios.find(
+    item => item.run === sesion.run
+  )
+
+
+  if (!usuario) {
+    return (
+      <main>
+
+        <section className="section">
+
+          <div className="container">
+
+            <div className="content-card">
+
+              <h1>
+                Usuario no encontrado
+              </h1>
+
+              <Link
+                className="btn btn-primary"
+                to="/login"
+              >
+                Volver al inicio de sesión
+              </Link>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+    )
+  }
+
+
+  const ordenes =
+    JSON.parse(localStorage.getItem('ordenes')) ||
+    ordenesIniciales
+
+
+  const pedidos = ordenes.filter(
+    orden =>
+      orden.customerEmail?.toLowerCase() ===
+      usuario.email.toLowerCase()
+  )
+
 
   return (
     <main>
@@ -54,37 +98,56 @@ function Perfil() {
 
         <div className="container two-col">
 
+
           <div className="content-card">
 
             <h2>
               Datos personales
             </h2>
 
-            <p>
-              <strong>Nombre:</strong> {usuario.nombre}
-            </p>
 
             <p>
-              <strong>Correo:</strong> {usuario.correo}
+              <strong>Nombre:</strong>{' '}
+              {usuario.firstName} {usuario.lastName}
             </p>
+
 
             <p>
-              <strong>RUN:</strong> {usuario.run}
+              <strong>Correo:</strong>{' '}
+              {usuario.email}
             </p>
+
 
             <p>
-              <strong>Región:</strong> {usuario.region}
+              <strong>RUN:</strong>{' '}
+              {usuario.run}
             </p>
+
 
             <p>
-              <strong>Comuna:</strong> {usuario.comuna}
+              <strong>Región:</strong>{' '}
+              {usuario.region}
             </p>
+
 
             <p>
-              <strong>Dirección:</strong> {usuario.direccion}
+              <strong>Comuna:</strong>{' '}
+              {usuario.commune}
             </p>
 
-            <Link className="btn btn-primary" to="/editar-perfil">Editar perfil</Link>
+
+            <p>
+              <strong>Dirección:</strong>{' '}
+              {usuario.address}
+            </p>
+
+
+            <Link
+              className="btn btn-primary"
+              to="/editar-perfil"
+            >
+              Editar perfil
+            </Link>
 
           </div>
 
@@ -95,49 +158,65 @@ function Perfil() {
               Mis pedidos
             </h2>
 
-            {pedidos.map(pedido => (
 
-              <div
-                key={pedido.id}
-                style={{
-                  marginBottom: '20px',
-                  paddingBottom: '16px',
-                  borderBottom: '1px solid var(--border)'
-                }}
-              >
+            {pedidos.length > 0 ? (
 
-                <p>
-                  <strong>
-                    {pedido.id}
-                  </strong>
-                </p>
+              pedidos.map(pedido => (
 
-                <p>
-                  Fecha: {pedido.fecha}
-                </p>
-
-                <p>
-                  Total: ${pedido.total.toLocaleString('es-CL')}
-                </p>
-
-                <p>
-                  Estado:{' '}
-
-                  <span className="badge badge-warning">
-                    {pedido.estado}
-                  </span>
-                </p>
-
-                <Link
-                  className="btn btn-secondary btn-sm"
-                  to={`/pedido/${pedido.id}`}
+                <div
+                  key={pedido.id}
+                  style={{
+                    marginBottom: '20px',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid var(--border)'
+                  }}
                 >
-                  Ver detalle
-                </Link>
 
-              </div>
+                  <p>
+                    <strong>
+                      {pedido.id}
+                    </strong>
+                  </p>
 
-            ))}
+
+                  <p>
+                    Fecha: {pedido.date}
+                  </p>
+
+
+                  <p>
+                    Total: $
+                    {Number(pedido.total).toLocaleString('es-CL')}
+                  </p>
+
+
+                  <p>
+                    Estado:{' '}
+
+                    <span className="badge badge-warning">
+                      {pedido.status}
+                    </span>
+                  </p>
+
+
+                  <Link
+                    className="btn btn-secondary btn-sm"
+                    to={`/pedido/${pedido.id}`}
+                  >
+                    Ver detalle
+                  </Link>
+
+                </div>
+
+              ))
+
+            ) : (
+
+              <p>
+                Todavía no tienes pedidos registrados.
+              </p>
+
+            )}
 
           </div>
 

@@ -3,20 +3,44 @@ import { Link, useNavigate } from 'react-router-dom'
 import CheckoutForm from '../components/CheckoutForm'
 import {
   productosIniciales,
-  ordenesIniciales
+  ordenesIniciales,
+  usuariosIniciales
 } from '../data/adminData'
 
 function Checkout() {
 
   const navigate = useNavigate()
 
+  const sesion =
+    JSON.parse(localStorage.getItem('sesion'))
+
+  const usuarios =
+    JSON.parse(localStorage.getItem('usuarios')) ||
+    usuariosIniciales
+
+  const usuario = sesion
+    ? usuarios.find(
+        usuario => usuario.run === sesion.run
+      )
+    : null
+
+
   const [datos, setDatos] = useState({
-    nombre: '',
-    correo: '',
-    direccion: '',
-    comuna: '',
+    nombre: usuario
+      ? `${usuario.firstName} ${usuario.lastName}`
+      : '',
+
+    correo: usuario?.email || '',
+
+    direccion: usuario?.address || '',
+
+    comuna: usuario?.commune || '',
+
     metodoPago: ''
   })
+
+
+  const [mensaje, setMensaje] = useState('')
 
 
   function cambiarDato(event) {
@@ -27,6 +51,8 @@ function Checkout() {
       ...datos,
       [name]: value
     })
+
+    setMensaje('')
   }
 
 
@@ -34,25 +60,41 @@ function Checkout() {
 
     event.preventDefault()
 
+    setMensaje('')
+
 
     const carrito =
       JSON.parse(localStorage.getItem('carrito')) || []
 
 
     if (carrito.length === 0) {
-      alert('El carrito está vacío')
+
+      setMensaje('Tu carrito está vacío.')
+
+      return
+    }
+
+
+    if (!datos.metodoPago) {
+
+      setMensaje('Selecciona un método de pago.')
+
       return
     }
 
 
     if (
-      !datos.nombre ||
-      !datos.correo ||
-      !datos.direccion ||
-      !datos.comuna ||
-      !datos.metodoPago
+      !usuario &&
+      (
+        !datos.nombre ||
+        !datos.correo ||
+        !datos.direccion ||
+        !datos.comuna
+      )
     ) {
-      alert('Completa todos los datos')
+
+      setMensaje('Completa todos los datos de la compra.')
+
       return
     }
 
@@ -79,7 +121,9 @@ function Checkout() {
 
 
     if (!stockSuficiente) {
+
       navigate('/pago-error')
+
       return
     }
 
@@ -119,8 +163,10 @@ function Checkout() {
         const cantidad =
           item.cantidad ?? item.quantity ?? 1
 
-        return acumulador +
+        return (
+          acumulador +
           item.price * cantidad
+        )
       },
       0
     )
@@ -138,6 +184,8 @@ function Checkout() {
       customer: datos.nombre,
 
       customerEmail: datos.correo,
+
+      customerRun: usuario?.run || null,
 
       address: datos.direccion,
 
@@ -174,9 +222,11 @@ function Checkout() {
     )
 
 
-    localStorage.setItem(
-      'carrito',
-      JSON.stringify([])
+    localStorage.removeItem('carrito')
+
+
+    window.dispatchEvent(
+      new Event('carritoActualizado')
     )
 
 
@@ -200,7 +250,9 @@ function Checkout() {
           </h1>
 
           <p>
-            Completa tus datos para continuar con el pedido.
+            {usuario
+              ? 'Selecciona un método de pago para completar tu compra.'
+              : 'Completa tus datos para continuar con el pedido.'}
           </p>
 
         </div>
@@ -212,10 +264,58 @@ function Checkout() {
 
         <div className="container">
 
+
+          {!usuario && (
+
+            <div
+              className="content-card"
+              style={{
+                maxWidth: '610px',
+                margin: '0 auto 20px'
+              }}
+            >
+
+              <strong>
+                ¿Ya tienes una cuenta?
+              </strong>
+
+              <p>
+                Inicia sesión para comprar usando
+                automáticamente tus datos guardados.
+              </p>
+
+              <Link
+                className="btn btn-secondary"
+                to="/login"
+              >
+                Iniciar sesión
+              </Link>
+
+            </div>
+
+          )}
+
+
+          {mensaje && (
+
+            <div
+              className="form-message error"
+              style={{
+                maxWidth: '610px',
+                margin: '0 auto 20px'
+              }}
+            >
+              ⚠️ {mensaje}
+            </div>
+
+          )}
+
+
           <CheckoutForm
             datos={datos}
             cambiarDato={cambiarDato}
             enviarCompra={enviarCompra}
+            usuario={usuario}
           />
 
 

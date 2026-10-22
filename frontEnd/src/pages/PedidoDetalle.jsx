@@ -1,56 +1,183 @@
-import { Link, useParams } from 'react-router-dom'
-
-const pedidos = [
-  {
-    id: 'ORD-001',
-    fecha: '10/10/2026',
-    total: 15490,
-    estado: 'Pendiente',
-    items: [
-      { nombre: 'Ascended Heroes Booster Pack', precio: 7990 },
-      { nombre: 'Donquixote Doflamingo', precio: 7500 },
-    ],
-  },
-  {
-    id: 'ORD-002',
-    fecha: '05/10/2026',
-    total: 23990,
-    estado: 'Entregado',
-    items: [
-      { nombre: 'Starter Deck', precio: 18990 },
-      { nombre: 'Accesorio de ejemplo', precio: 5000 },
-    ],
-  },
-]
+import { Link, Navigate, useParams } from 'react-router-dom'
+import { ordenesIniciales } from '../data/adminData'
 
 export default function PedidoDetalle() {
+
   const { id } = useParams()
-  const pedido = pedidos.find((item) => item.id === id)
+
+  const sesion =
+    JSON.parse(localStorage.getItem('sesion'))
+
+
+  if (!sesion) {
+    return <Navigate to="/login" />
+  }
+
+
+  const ordenes =
+    JSON.parse(localStorage.getItem('ordenes')) ||
+    ordenesIniciales
+
+
+  const pedido = ordenes.find(
+    orden =>
+      orden.id === id &&
+      orden.customerEmail?.toLowerCase() ===
+        sesion.email.toLowerCase()
+  )
+
+
+  if (!pedido) {
+
+    return (
+      <main className="container section">
+
+        <section className="content-card">
+
+          <h1>
+            Pedido no encontrado
+          </h1>
+
+          <p>
+            El pedido no existe o no pertenece a tu cuenta.
+          </p>
+
+          <Link
+            className="btn btn-secondary"
+            to="/perfil"
+          >
+            Volver a mi perfil
+          </Link>
+
+        </section>
+
+      </main>
+    )
+  }
+
+
   return (
     <main className="container section">
+
       <section className="content-card">
-        <h1>{pedido ? `Pedido ${pedido.id}` : 'Pedido no encontrado'}</h1>
-        {pedido && (
-          <>
-            <p>Vista estática de ejemplo. No corresponde a una compra real.</p>
-            <p>
-              {pedido.fecha} · {pedido.estado}
-            </p>
-            {pedido.items.map((item) => (
-              <p key={item.nombre}>
-                {item.nombre} · 1 unidad · $
-                {item.precio.toLocaleString('es-CL')}
-              </p>
-            ))}
-            <p>
-              <strong>Total: ${pedido.total.toLocaleString('es-CL')}</strong>
-            </p>
-          </>
+
+        <span className="eyebrow">
+          Mi pedido
+        </span>
+
+        <h1>
+          Pedido {pedido.id}
+        </h1>
+
+
+        <p>
+          <strong>Fecha:</strong>{' '}
+          {pedido.date}
+        </p>
+
+
+        <p>
+          <strong>Estado:</strong>{' '}
+
+          <span className="badge badge-warning">
+            {pedido.status}
+          </span>
+        </p>
+
+
+        {pedido.address && (
+
+          <p>
+            <strong>Dirección:</strong>{' '}
+            {pedido.address}
+          </p>
+
         )}
-        <Link className="btn btn-secondary" to="/perfil">
+
+
+        {pedido.commune && (
+
+          <p>
+            <strong>Comuna:</strong>{' '}
+            {pedido.commune}
+          </p>
+
+        )}
+
+
+        {pedido.paymentMethod && (
+
+          <p>
+            <strong>Método de pago:</strong>{' '}
+            {pedido.paymentMethod}
+          </p>
+
+        )}
+
+
+        <hr />
+
+
+        <h2>
+          Productos
+        </h2>
+
+
+        {pedido.items.map((item, index) => (
+
+          <div
+            key={`${item.productId}-${index}`}
+            style={{
+              marginBottom: '16px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid var(--border)'
+            }}
+          >
+
+            <p>
+              <strong>
+                {item.name}
+              </strong>
+            </p>
+
+            <p>
+              Cantidad: {item.qty}
+            </p>
+
+            <p>
+              Precio unitario: $
+              {Number(item.price).toLocaleString('es-CL')}
+            </p>
+
+            <p>
+              Subtotal: $
+              {Number(
+                item.price * item.qty
+              ).toLocaleString('es-CL')}
+            </p>
+
+          </div>
+
+        ))}
+
+
+        <p>
+          <strong>
+            Total: $
+            {Number(pedido.total).toLocaleString('es-CL')}
+          </strong>
+        </p>
+
+
+        <Link
+          className="btn btn-secondary"
+          to="/perfil"
+        >
           Volver a mi perfil
         </Link>
+
       </section>
+
     </main>
   )
 }
