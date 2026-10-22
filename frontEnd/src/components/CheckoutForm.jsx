@@ -122,7 +122,7 @@ function CheckoutForm({
 
           <button
             className="btn btn-primary"
-            type="button" disabled
+            type="submit"
           >
             Confirmar compra
           </button>

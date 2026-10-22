@@ -1,28 +1,101 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import CartItem from '../components/CartItem'
 
 function Carrito() {
 
-  const carrito = [
-    {
-      id: 1,
-      name: 'Ascended Heroes Booster Pack',
-      price: 7990,
-      stock: 8,
-      cantidad: 1,
-      category: 'Sobres sellados',
-      image: '/assets/img/sobre-pk.png'
-    },
-    {
-      id: 2,
-      name: 'Donquixote Doflamingo',
-      price: 7500,
-      stock: 5,
-      cantidad: 1,
-      category: 'Cartas individuales',
-      image: '/assets/img/doffy.png'
-    }
-  ]
+  const [carrito, setCarrito] = useState(() => {
+
+    const carritoGuardado =
+      JSON.parse(localStorage.getItem('carrito')) || []
+
+    return carritoGuardado.map(item => ({
+      ...item,
+      cantidad: item.quantity ?? item.cantidad ?? 1
+    }))
+  })
+
+
+  const aumentarCantidad = (id) => {
+
+    const carritoActualizado = carrito.map(item => {
+
+      if (item.id === id) {
+
+        if (item.cantidad >= item.stock) {
+          alert('No hay más stock disponible')
+          return item
+        }
+
+        return {
+          ...item,
+          cantidad: item.cantidad + 1,
+          quantity: item.cantidad + 1
+        }
+      }
+
+      return item
+    })
+
+    setCarrito(carritoActualizado)
+
+    localStorage.setItem(
+      'carrito',
+      JSON.stringify(carritoActualizado)
+    )
+  }
+
+
+  const disminuirCantidad = (id) => {
+
+    const carritoActualizado = carrito.map(item => {
+
+      if (item.id === id && item.cantidad > 1) {
+
+        return {
+          ...item,
+          cantidad: item.cantidad - 1,
+          quantity: item.cantidad - 1
+        }
+      }
+
+      return item
+    })
+
+    setCarrito(carritoActualizado)
+
+    localStorage.setItem(
+      'carrito',
+      JSON.stringify(carritoActualizado)
+    )
+  }
+
+
+  const eliminarProducto = (id) => {
+
+    const carritoActualizado = carrito.filter(
+      item => item.id !== id
+    )
+
+    setCarrito(carritoActualizado)
+
+    localStorage.setItem(
+      'carrito',
+      JSON.stringify(carritoActualizado)
+    )
+  }
+
+
+  const vaciarCarrito = () => {
+
+    setCarrito([])
+
+    localStorage.setItem(
+      'carrito',
+      JSON.stringify([])
+    )
+  }
+
 
   const total = carrito.reduce(
     (acumulador, item) =>
@@ -30,16 +103,19 @@ function Carrito() {
     0
   )
 
+
   const cantidadTotal = carrito.reduce(
     (acumulador, item) =>
       acumulador + item.cantidad,
     0
   )
 
+
   return (
     <main>
 
       <section className="page-header">
+
         <div className="container">
 
           <span className="eyebrow">
@@ -55,6 +131,7 @@ function Carrito() {
           </p>
 
         </div>
+
       </section>
 
 
@@ -67,10 +144,15 @@ function Carrito() {
             {carrito.length > 0 ? (
 
               carrito.map(item => (
+
                 <CartItem
                   key={item.id}
                   item={item}
+                  aumentar={aumentarCantidad}
+                  disminuir={disminuirCantidad}
+                  eliminar={eliminarProducto}
                 />
+
               ))
 
             ) : (
@@ -117,6 +199,7 @@ function Carrito() {
 
             </div>
 
+
             <div className="summary-line total">
 
               <span>
@@ -129,6 +212,7 @@ function Carrito() {
 
             </div>
 
+
             <Link
               className="btn btn-primary cart-pay"
               to="/checkout"
@@ -136,10 +220,12 @@ function Carrito() {
               Continuar compra
             </Link>
 
+
             <button
               className="btn btn-danger cart-pay"
               type="button"
-              disabled title="Disponible en una próxima etapa"
+              onClick={vaciarCarrito}
+              disabled={carrito.length === 0}
             >
               Vaciar carrito
             </button>

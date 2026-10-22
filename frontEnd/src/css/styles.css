@@ -360,3 +360,24 @@ textarea { min-height: 130px; resize: vertical; }
   width: 100%;
   line-height: 1.7;
 }
+.product-message {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.product-message.ok {
+  background: #eafaf1;
+  color: #1f7a45;
+  border: 1px solid #b7ebc6;
+}
+
+.product-message.error {
+  background: #fff4e5;
+  color: #b26a00;
+  border: 1px solid #ffd59a;
+}

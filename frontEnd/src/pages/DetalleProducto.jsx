@@ -1,14 +1,76 @@
-import { productosIniciales as productos } from '../data/adminData'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { productosIniciales } from '../data/adminData'
 
 function DetalleProducto() {
 
   const { id } = useParams()
 
+  const [cantidad, setCantidad] = useState(1)
 
-  const producto = productos.find(
-    producto => producto.id === Number(id)
-  )
+  const [producto] = useState(() => {
+
+    const productosGuardados =
+      JSON.parse(localStorage.getItem('productos')) || productosIniciales
+
+    return productosGuardados.find(
+      producto => producto.id === Number(id)
+    )
+  })
+
+
+  function agregarAlCarrito() {
+
+    if (cantidad < 1 || cantidad > producto.stock) {
+      return
+    }
+
+    const carrito =
+      JSON.parse(localStorage.getItem('carrito')) || []
+
+    const productoExistente = carrito.find(
+      item => item.id === producto.id
+    )
+
+
+    if (productoExistente) {
+
+      const cantidadActual =
+        productoExistente.quantity ??
+        productoExistente.cantidad ??
+        1
+
+      const nuevaCantidad =
+        cantidadActual + cantidad
+
+      if (nuevaCantidad > producto.stock) {
+        return
+      }
+
+      productoExistente.quantity = nuevaCantidad
+      productoExistente.cantidad = nuevaCantidad
+
+    } else {
+
+      carrito.push({
+        ...producto,
+        quantity: cantidad,
+        cantidad: cantidad
+      })
+
+    }
+
+
+    localStorage.setItem(
+      'carrito',
+      JSON.stringify(carrito)
+    )
+
+    window.dispatchEvent(
+      new Event('carritoActualizado')
+    )
+  }
+
 
   if (!producto) {
     return (
@@ -34,6 +96,7 @@ function DetalleProducto() {
       </main>
     )
   }
+
 
   return (
     <main>
@@ -63,7 +126,10 @@ function DetalleProducto() {
 
             <div className="product-detail-media">
 
-              <img src={producto.image} alt={producto.name} />
+              <img
+                src={producto.image}
+                alt={producto.name}
+              />
 
             </div>
 
@@ -90,6 +156,7 @@ function DetalleProducto() {
                 Stock disponible: {producto.stock}
               </p>
 
+
               <div className="quantity-row">
 
                 <div className="form-group">
@@ -103,16 +170,22 @@ function DetalleProducto() {
                     type="number"
                     min="1"
                     max={producto.stock}
-                    defaultValue="1"
+                    value={cantidad}
+                    onChange={event =>
+                      setCantidad(Number(event.target.value))
+                    }
                   />
 
                 </div>
 
               </div>
 
+
               <button
                 className="btn btn-primary"
                 type="button"
+                onClick={agregarAlCarrito}
+                disabled={producto.stock === 0}
               >
                 Añadir al carrito
               </button>

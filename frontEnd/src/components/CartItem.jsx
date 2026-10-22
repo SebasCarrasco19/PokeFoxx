@@ -1,4 +1,4 @@
-function CartItem({ item }) {
+function CartItem({ item, aumentar, disminuir, eliminar }) {
 
   const subtotal = item.price * item.cantidad
 
@@ -27,7 +27,7 @@ function CartItem({ item }) {
           <button
             className="qty-btn"
             type="button"
-            disabled title="Disponible en una próxima etapa"
+            onClick={() => disminuir(item.id)}
           >
             −
           </button>
@@ -39,7 +39,7 @@ function CartItem({ item }) {
           <button
             className="qty-btn"
             type="button"
-            disabled title="Disponible en una próxima etapa"
+            onClick={() => aumentar(item.id)}
           >
             +
           </button>
@@ -47,7 +47,7 @@ function CartItem({ item }) {
           <button
             className="btn btn-danger btn-sm"
             type="button"
-            disabled title="Disponible en una próxima etapa"
+            onClick={() => eliminar(item.id)}
           >
             Eliminar
           </button>

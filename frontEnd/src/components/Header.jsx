@@ -1,13 +1,50 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 function Header() {
 
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [cantidadCarrito, setCantidadCarrito] = useState(0)
+
 
   function cerrarMenu() {
     setMenuAbierto(false)
   }
+
+
+  function actualizarCarrito() {
+
+    const carrito =
+      JSON.parse(localStorage.getItem('carrito')) || []
+
+    const cantidad = carrito.reduce(
+      (total, item) =>
+        total + (item.quantity ?? item.cantidad ?? 1),
+      0
+    )
+
+    setCantidadCarrito(cantidad)
+  }
+
+
+  useEffect(() => {
+
+    actualizarCarrito()
+
+    window.addEventListener(
+      'carritoActualizado',
+      actualizarCarrito
+    )
+
+    return () => {
+      window.removeEventListener(
+        'carritoActualizado',
+        actualizarCarrito
+      )
+    }
+
+  }, [])
+
 
   return (
     <header className="site-header">
@@ -25,6 +62,7 @@ function Header() {
           />
         </Link>
 
+
         <button
           className="nav-toggle"
           type="button"
@@ -33,6 +71,7 @@ function Header() {
         >
           ☰
         </button>
+
 
         <nav
           className={`main-nav ${menuAbierto ? 'open' : ''}`}
@@ -91,6 +130,7 @@ function Header() {
 
         </nav>
 
+
         <div className="header-actions">
 
           <Link
@@ -104,11 +144,12 @@ function Header() {
             className="cart-link"
             to="/carrito"
           >
-            🛒 Carrito
-            {' '}
+            🛒 Carrito{' '}
+
             <span className="cart-count">
-              0
+              {cantidadCarrito}
             </span>
+
           </Link>
 
         </div>
