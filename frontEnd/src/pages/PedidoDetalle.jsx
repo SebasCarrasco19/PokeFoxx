@@ -5,12 +5,19 @@ export default function PedidoDetalle() {
 
   const { id } = useParams()
 
+
   const sesion =
     JSON.parse(localStorage.getItem('sesion'))
 
 
   if (!sesion) {
-    return <Navigate to="/login" />
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    )
   }
 
 
@@ -19,12 +26,24 @@ export default function PedidoDetalle() {
     ordenesIniciales
 
 
-  const pedido = ordenes.find(
-    orden =>
-      orden.id === id &&
+  const pedido = ordenes.find(orden => {
+
+    if (orden.id !== id) {
+      return false
+    }
+
+
+    if (orden.customerRun) {
+
+      return orden.customerRun === sesion.run
+    }
+
+
+    return (
       orden.customerEmail?.toLowerCase() ===
-        sesion.email.toLowerCase()
-  )
+      sesion.email.toLowerCase()
+    )
+  })
 
 
   if (!pedido) {
@@ -65,30 +84,40 @@ export default function PedidoDetalle() {
           Mi pedido
         </span>
 
+
         <h1>
           Pedido {pedido.id}
         </h1>
 
 
         <p>
-          <strong>Fecha:</strong>{' '}
+          <strong>
+            Fecha:
+          </strong>{' '}
+
           {pedido.date}
         </p>
 
 
         <p>
-          <strong>Estado:</strong>{' '}
+          <strong>
+            Estado:
+          </strong>{' '}
 
           <span className="badge badge-warning">
             {pedido.status}
           </span>
+
         </p>
 
 
         {pedido.address && (
 
           <p>
-            <strong>Dirección:</strong>{' '}
+            <strong>
+              Dirección:
+            </strong>{' '}
+
             {pedido.address}
           </p>
 
@@ -98,7 +127,10 @@ export default function PedidoDetalle() {
         {pedido.commune && (
 
           <p>
-            <strong>Comuna:</strong>{' '}
+            <strong>
+              Comuna:
+            </strong>{' '}
+
             {pedido.commune}
           </p>
 
@@ -108,7 +140,10 @@ export default function PedidoDetalle() {
         {pedido.paymentMethod && (
 
           <p>
-            <strong>Método de pago:</strong>{' '}
+            <strong>
+              Método de pago:
+            </strong>{' '}
+
             {pedido.paymentMethod}
           </p>
 
@@ -130,7 +165,8 @@ export default function PedidoDetalle() {
             style={{
               marginBottom: '16px',
               paddingBottom: '16px',
-              borderBottom: '1px solid var(--border)'
+              borderBottom:
+                '1px solid var(--border)'
             }}
           >
 
@@ -140,14 +176,19 @@ export default function PedidoDetalle() {
               </strong>
             </p>
 
+
             <p>
               Cantidad: {item.qty}
             </p>
 
+
             <p>
               Precio unitario: $
-              {Number(item.price).toLocaleString('es-CL')}
+              {Number(
+                item.price
+              ).toLocaleString('es-CL')}
             </p>
+
 
             <p>
               Subtotal: $
@@ -162,10 +203,14 @@ export default function PedidoDetalle() {
 
 
         <p>
+
           <strong>
             Total: $
-            {Number(pedido.total).toLocaleString('es-CL')}
+            {Number(
+              pedido.total
+            ).toLocaleString('es-CL')}
           </strong>
+
         </p>
 
 

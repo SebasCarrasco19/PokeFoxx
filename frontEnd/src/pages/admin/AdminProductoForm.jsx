@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   productosIniciales,
-  categorias,
+  categorias as categoriasIniciales,
   juegos
 } from '../../data/adminData'
 
@@ -24,53 +24,103 @@ function AdminProductoForm() {
   const { id } = useParams()
   const navigate = useNavigate()
 
+
   const productos =
     JSON.parse(localStorage.getItem('productos')) ||
     productosIniciales
 
+
+  const categorias =
+    JSON.parse(localStorage.getItem('categorias')) ||
+    categoriasIniciales
+
+
   const productoActual = productos.find(
-    producto => Number(producto.id) === Number(id)
+    producto =>
+      Number(producto.id) === Number(id)
   )
 
-  const datos = productoActual ?? formularioVacio
-  const editando = Boolean(id)
+
+  const datos =
+    productoActual ?? formularioVacio
+
+
+  const editando =
+    Boolean(id)
 
 
   function guardarProducto(event) {
 
     event.preventDefault()
 
-    const formulario = new FormData(event.target)
+
+    const formulario =
+      new FormData(event.target)
 
 
     const productoGuardado = {
+
       id: editando
         ? Number(id)
-        : Math.max(...productos.map(producto => producto.id), 0) + 1,
+        : Math.max(
+            ...productos.map(
+              producto => producto.id
+            ),
+            0
+          ) + 1,
 
-      code: formulario.get('code'),
 
-      name: formulario.get('name'),
+      code:
+        formulario.get('code'),
 
-      description: formulario.get('description'),
 
-      price: Number(formulario.get('price')),
+      name:
+        formulario.get('name'),
 
-      originalPrice: Number(formulario.get('originalPrice')),
 
-      stock: Number(formulario.get('stock')),
+      description:
+        formulario.get('description'),
 
-      criticalStock: Number(formulario.get('criticalStock')),
 
-      category: formulario.get('category'),
+      price:
+        Number(
+          formulario.get('price')
+        ),
 
-      game: formulario.get('game'),
+
+      originalPrice:
+        Number(
+          formulario.get('originalPrice')
+        ),
+
+
+      stock:
+        Number(
+          formulario.get('stock')
+        ),
+
+
+      criticalStock:
+        Number(
+          formulario.get('criticalStock')
+        ),
+
+
+      category:
+        formulario.get('category'),
+
+
+      game:
+        formulario.get('game'),
+
 
       image:
         formulario.get('image') ||
         '/assets/img/logo.svg',
 
-      onSale: formulario.get('onSale') === 'on'
+
+      onSale:
+        formulario.get('onSale') === 'on'
     }
 
 
@@ -79,14 +129,19 @@ function AdminProductoForm() {
 
     if (editando) {
 
-      productosActualizados = productos.map(producto => {
+      productosActualizados =
+        productos.map(producto => {
 
-        if (Number(producto.id) === Number(id)) {
-          return productoGuardado
-        }
+          if (
+            Number(producto.id) ===
+            Number(id)
+          ) {
 
-        return producto
-      })
+            return productoGuardado
+          }
+
+          return producto
+        })
 
     } else {
 
@@ -107,7 +162,10 @@ function AdminProductoForm() {
   }
 
 
-  if (editando && !productoActual) {
+  if (
+    editando &&
+    !productoActual
+  ) {
 
     return (
       <div className="content-card">
@@ -134,7 +192,9 @@ function AdminProductoForm() {
       <div className="admin-title">
 
         <h1>
-          {editando ? 'Editar producto' : 'Nuevo producto'}
+          {editando
+            ? 'Editar producto'
+            : 'Nuevo producto'}
         </h1>
 
         <p>
@@ -296,6 +356,7 @@ function AdminProductoForm() {
                 Selecciona una categoría
               </option>
 
+
               {categorias.map(categoria => (
 
                 <option
@@ -328,6 +389,7 @@ function AdminProductoForm() {
               <option value="">
                 Selecciona un juego
               </option>
+
 
               {juegos.map(juego => (
 
@@ -387,6 +449,7 @@ function AdminProductoForm() {
           >
             Guardar producto
           </button>
+
 
           <Link
             className="btn btn-secondary"

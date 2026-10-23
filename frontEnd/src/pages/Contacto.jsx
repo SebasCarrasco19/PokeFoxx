@@ -6,9 +6,45 @@ function Contacto() {
   const [correo, setCorreo] = useState('')
   const [mensaje, setMensaje] = useState('')
 
+  const [respuesta, setRespuesta] = useState('')
+  const [tipoRespuesta, setTipoRespuesta] = useState('')
+
+
   function manejarSubmit(event) {
+
     event.preventDefault()
+
+    setRespuesta('')
+
+
+    if (
+      !nombre.trim() ||
+      !correo.trim() ||
+      !mensaje.trim()
+    ) {
+
+      setTipoRespuesta('error')
+
+      setRespuesta(
+        'Completa todos los campos antes de enviar el mensaje.'
+      )
+
+      return
+    }
+
+
+    setTipoRespuesta('success')
+
+    setRespuesta(
+      'Mensaje enviado correctamente. Gracias por contactarnos.'
+    )
+
+
+    setNombre('')
+    setCorreo('')
+    setMensaje('')
   }
+
 
   return (
     <main>
@@ -46,6 +82,7 @@ function Contacto() {
 
             <div className="form-grid">
 
+
               <div className="form-group">
 
                 <label htmlFor="nombre">
@@ -60,6 +97,7 @@ function Contacto() {
                     setNombre(event.target.value)
                   }
                   maxLength="100"
+                  required
                 />
 
               </div>
@@ -79,6 +117,7 @@ function Contacto() {
                     setCorreo(event.target.value)
                   }
                   maxLength="100"
+                  required
                 />
 
               </div>
@@ -97,9 +136,31 @@ function Contacto() {
                     setMensaje(event.target.value)
                   }
                   maxLength="500"
+                  required
                 />
 
               </div>
+
+
+              {respuesta && (
+
+                <div className="form-group full">
+
+                  <div
+                    className={`form-message ${tipoRespuesta}`}
+                  >
+
+                    {tipoRespuesta === 'success'
+                      ? '✅'
+                      : '⚠️'}{' '}
+
+                    {respuesta}
+
+                  </div>
+
+                </div>
+
+              )}
 
 
               <div className="form-group full">

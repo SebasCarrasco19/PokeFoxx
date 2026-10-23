@@ -1,6 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { usuariosIniciales, regiones } from '../../data/adminData'
+import {
+  Link,
+  useNavigate,
+  useParams
+} from 'react-router-dom'
+import {
+  usuariosIniciales,
+  regiones
+} from '../../data/adminData'
 
 const formularioVacio = {
   run: '',
@@ -32,13 +39,14 @@ function AdminUsuarioForm() {
   const editando = Boolean(run)
 
 
-  const [regionSeleccionada, setRegionSeleccionada] = useState(
-    datos.region
-  )
+  const [regionSeleccionada, setRegionSeleccionada] =
+    useState(datos.region)
 
-  const [comunaSeleccionada, setComunaSeleccionada] = useState(
-    datos.commune
-  )
+  const [comunaSeleccionada, setComunaSeleccionada] =
+    useState(datos.commune)
+
+  const [mensaje, setMensaje] =
+    useState('')
 
 
   const comunas =
@@ -58,7 +66,11 @@ function AdminUsuarioForm() {
 
     event.preventDefault()
 
-    const formulario = new FormData(event.target)
+    setMensaje('')
+
+    const formulario =
+      new FormData(event.target)
+
 
     const runUsuario = editando
       ? run
@@ -72,22 +84,34 @@ function AdminUsuarioForm() {
       )
 
       if (runExiste) {
-        alert('Ya existe un usuario con ese RUN')
+
+        setMensaje(
+          'Ya existe un usuario con ese RUN.'
+        )
+
         return
       }
     }
 
 
-    const correo = formulario.get('email')
+    const correo =
+      formulario.get('email').trim()
+
 
     const correoExiste = usuarios.some(
       usuario =>
-        usuario.email === correo &&
+        usuario.email.toLowerCase() ===
+          correo.toLowerCase() &&
         usuario.run !== run
     )
 
+
     if (correoExiste) {
-      alert('Ya existe un usuario con ese correo')
+
+      setMensaje(
+        'Ya existe un usuario con ese correo.'
+      )
+
       return
     }
 
@@ -111,14 +135,15 @@ function AdminUsuarioForm() {
 
     if (editando) {
 
-      usuariosActualizados = usuarios.map(usuario => {
+      usuariosActualizados =
+        usuarios.map(usuario => {
 
-        if (usuario.run === run) {
-          return usuarioGuardado
-        }
+          if (usuario.run === run) {
+            return usuarioGuardado
+          }
 
-        return usuario
-      })
+          return usuario
+        })
 
     } else {
 
@@ -166,7 +191,9 @@ function AdminUsuarioForm() {
       <div className="admin-title">
 
         <h1>
-          {editando ? 'Editar usuario' : 'Nuevo usuario'}
+          {editando
+            ? 'Editar usuario'
+            : 'Nuevo usuario'}
         </h1>
 
         <p>
@@ -183,6 +210,20 @@ function AdminUsuarioForm() {
         key={run ?? 'nuevo'}
         onSubmit={guardarUsuario}
       >
+
+        {mensaje && (
+
+          <div
+            className="form-message error"
+            style={{
+              marginBottom: '20px'
+            }}
+          >
+            ⚠️ {mensaje}
+          </div>
+
+        )}
+
 
         <div className="form-grid">
 
@@ -374,7 +415,9 @@ function AdminUsuarioForm() {
               name="commune"
               value={comunaSeleccionada}
               onChange={event =>
-                setComunaSeleccionada(event.target.value)
+                setComunaSeleccionada(
+                  event.target.value
+                )
               }
               disabled={!regionSeleccionada}
               required

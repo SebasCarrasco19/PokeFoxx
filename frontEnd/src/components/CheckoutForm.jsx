@@ -4,6 +4,7 @@ function CheckoutForm({
   enviarCompra,
   usuario
 }) {
+
   return (
     <form
       className="content-card form-card"
@@ -28,6 +29,7 @@ function CheckoutForm({
                 type="text"
                 value={datos.nombre}
                 onChange={cambiarDato}
+                maxLength="150"
                 required
               />
 
@@ -46,6 +48,7 @@ function CheckoutForm({
                 type="email"
                 value={datos.correo}
                 onChange={cambiarDato}
+                maxLength="100"
                 required
               />
 
@@ -64,6 +67,7 @@ function CheckoutForm({
                 type="text"
                 value={datos.direccion}
                 onChange={cambiarDato}
+                maxLength="300"
                 required
               />
 
@@ -82,6 +86,7 @@ function CheckoutForm({
                 type="text"
                 value={datos.comuna}
                 onChange={cambiarDato}
+                maxLength="100"
                 required
               />
 
@@ -109,15 +114,15 @@ function CheckoutForm({
               Selecciona una opción
             </option>
 
-            <option value="debito">
+            <option value="Tarjeta de débito">
               Tarjeta de débito
             </option>
 
-            <option value="credito">
+            <option value="Tarjeta de crédito">
               Tarjeta de crédito
             </option>
 
-            <option value="transferencia">
+            <option value="Transferencia">
               Transferencia
             </option>
 

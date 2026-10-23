@@ -15,31 +15,33 @@ function PagoError() {
             </span>
 
             <h1>
-              No pudimos procesar el pago
+              No pudimos completar la compra
             </h1>
 
             <p>
-              Ocurrió un problema durante el proceso de compra.
+              Uno o más productos de tu carrito ya no tienen
+              stock suficiente para completar el pedido.
             </p>
 
             <p>
-              Puedes intentarlo nuevamente.
+              Tu carrito se mantiene guardado para que puedas
+              revisarlo e intentarlo nuevamente.
             </p>
 
             <div className="hero-actions">
 
               <Link
                 className="btn btn-primary"
-                to="/checkout"
+                to="/carrito"
               >
-                Intentar nuevamente
+                Revisar carrito
               </Link>
 
               <Link
                 className="btn btn-secondary"
-                to="/carrito"
+                to="/productos"
               >
-                Volver al carrito
+                Ver productos
               </Link>
 
             </div>

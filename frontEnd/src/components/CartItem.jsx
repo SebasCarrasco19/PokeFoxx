@@ -1,6 +1,16 @@
-function CartItem({ item, aumentar, disminuir, eliminar }) {
+function CartItem({
+  item,
+  aumentar,
+  disminuir,
+  eliminar
+}) {
 
-  const subtotal = item.price * item.cantidad
+  const precio =
+    Number(item.price)
+
+  const subtotal =
+    precio * item.cantidad
+
 
   return (
     <article className="cart-item">
@@ -10,44 +20,61 @@ function CartItem({ item, aumentar, disminuir, eliminar }) {
         alt={item.name}
       />
 
+
       <div>
 
-        <h3>{item.name}</h3>
+        <h3>
+          {item.name}
+        </h3>
+
 
         <div className="product-meta">
           {item.category}
         </div>
 
+
         <strong>
-          ${item.price.toLocaleString('es-CL')}
+          $
+          {precio.toLocaleString('es-CL')}
         </strong>
+
 
         <div className="cart-controls">
 
           <button
             className="qty-btn"
             type="button"
-            onClick={() => disminuir(item.id)}
+            onClick={() =>
+              disminuir(item.id)
+            }
+            disabled={item.cantidad <= 1}
           >
             −
           </button>
+
 
           <span>
             {item.cantidad}
           </span>
 
+
           <button
             className="qty-btn"
             type="button"
-            onClick={() => aumentar(item.id)}
+            onClick={() =>
+              aumentar(item.id)
+            }
           >
             +
           </button>
 
+
           <button
             className="btn btn-danger btn-sm"
             type="button"
-            onClick={() => eliminar(item.id)}
+            onClick={() =>
+              eliminar(item.id)
+            }
           >
             Eliminar
           </button>
@@ -56,10 +83,14 @@ function CartItem({ item, aumentar, disminuir, eliminar }) {
 
       </div>
 
+
       <div>
+
         <strong>
-          ${subtotal.toLocaleString('es-CL')}
+          $
+          {subtotal.toLocaleString('es-CL')}
         </strong>
+
       </div>
 
     </article>

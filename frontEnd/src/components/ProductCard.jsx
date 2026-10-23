@@ -6,32 +6,68 @@ function ProductCard({ producto }) {
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState('ok')
 
-  const nombre = producto.nombre ?? producto.name
-  const precio = producto.precio ?? producto.price
+
+  const nombre =
+    producto.nombre ?? producto.name
+
+  const precio =
+    producto.precio ?? producto.price
+
   const precioOriginal =
     producto.precioOriginal ?? producto.originalPrice
 
   const categoria =
-    producto.categoria ?? producto.category ?? 'TCG'
+    producto.categoria ??
+    producto.category ??
+    'TCG'
 
   const juego =
-    producto.juego ?? producto.game ?? 'TCG'
+    producto.juego ??
+    producto.game ??
+    'TCG'
 
   const oferta =
-    producto.oferta ?? producto.onSale ?? false
+    producto.oferta ??
+    producto.onSale ??
+    false
 
   const imagen =
-    producto.imagen ?? producto.image
+    producto.imagen ??
+    producto.image
 
 
-  const agregarAlCarrito = () => {
+  function mostrarMensaje(tipo, texto) {
 
-    const carritoGuardado =
+    setTipoMensaje(tipo)
+    setMensaje(texto)
+
+    setTimeout(() => {
+      setMensaje('')
+    }, 2000)
+  }
+
+
+  function agregarAlCarrito() {
+
+    if (producto.stock <= 0) {
+
+      mostrarMensaje(
+        'error',
+        'Producto sin stock.'
+      )
+
+      return
+    }
+
+
+    const carrito =
       JSON.parse(localStorage.getItem('carrito')) || []
 
-    const productoExistente = carritoGuardado.find(
+
+    const productoExistente = carrito.find(
       item => item.id === producto.id
     )
+
 
     if (productoExistente) {
 
@@ -40,47 +76,49 @@ function ProductCard({ producto }) {
         productoExistente.cantidad ??
         1
 
+
       if (cantidadActual >= producto.stock) {
-        setTipoMensaje('error')
-        setMensaje('No hay más stock disponible')
-        setTimeout(() => setMensaje(''), 2000)
+
+        mostrarMensaje(
+          'error',
+          'No hay más stock disponible.'
+        )
+
         return
       }
 
-      productoExistente.quantity = cantidadActual + 1
-      productoExistente.cantidad = cantidadActual + 1
+
+      productoExistente.quantity =
+        cantidadActual + 1
+
+      productoExistente.cantidad =
+        cantidadActual + 1
 
     } else {
 
-      if (producto.stock <= 0) {
-        setTipoMensaje('error')
-        setMensaje('Producto sin stock')
-        setTimeout(() => setMensaje(''), 2000)
-        return
-      }
-
-      carritoGuardado.push({
+      carrito.push({
         ...producto,
         quantity: 1,
         cantidad: 1
       })
     }
 
+
     localStorage.setItem(
       'carrito',
-      JSON.stringify(carritoGuardado)
+      JSON.stringify(carrito)
     )
+
 
     window.dispatchEvent(
       new Event('carritoActualizado')
     )
 
-    setTipoMensaje('ok')
-    setMensaje('Producto añadido al carrito')
 
-    setTimeout(() => {
-      setMensaje('')
-    }, 2000)
+    mostrarMensaje(
+      'ok',
+      'Producto añadido al carrito.'
+    )
   }
 
 
@@ -92,24 +130,32 @@ function ProductCard({ producto }) {
         to={`/producto/${producto.id}`}
         aria-label={`Ver ${nombre}`}
       >
+
         {oferta && (
+
           <span className="offer-badge">
             Oferta
           </span>
+
         )}
 
+
         {imagen && (
+
           <img
             src={imagen}
             alt={nombre}
           />
+
         )}
+
       </Link>
 
 
       <div className="product-card-body">
 
         <div className="product-card-tags">
+
           <span className="product-game">
             {juego}
           </span>
@@ -117,26 +163,38 @@ function ProductCard({ producto }) {
           <span className="product-meta">
             {categoria}
           </span>
+
         </div>
 
 
         <h3>
+
           <Link to={`/producto/${producto.id}`}>
             {nombre}
           </Link>
+
         </h3>
 
 
         <div className="product-price-row">
 
           {oferta && precioOriginal && (
+
             <span className="product-price-old">
-              ${precioOriginal.toLocaleString('es-CL')}
+              $
+              {Number(
+                precioOriginal
+              ).toLocaleString('es-CL')}
             </span>
+
           )}
 
+
           <span className="product-price">
-            ${precio.toLocaleString('es-CL')}
+            $
+            {Number(
+              precio
+            ).toLocaleString('es-CL')}
           </span>
 
         </div>
@@ -146,16 +204,25 @@ function ProductCard({ producto }) {
           className="btn btn-primary"
           type="button"
           onClick={agregarAlCarrito}
-          disabled={producto.stock === 0}
+          disabled={producto.stock <= 0}
         >
-          Añadir al carrito
+          {producto.stock <= 0
+            ? 'Sin stock'
+            : 'Añadir al carrito'}
         </button>
 
 
         {mensaje && (
-          <p className={`product-message ${tipoMensaje}`}>
-            {tipoMensaje === 'ok' ? '✅' : '⚠️'} {mensaje}
+
+          <p
+            className={`product-message ${tipoMensaje}`}
+          >
+            {tipoMensaje === 'ok'
+              ? '✅'
+              : '⚠️'}{' '}
+            {mensaje}
           </p>
+
         )}
 
       </div>

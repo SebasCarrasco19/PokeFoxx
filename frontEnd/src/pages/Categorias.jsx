@@ -1,33 +1,31 @@
 import CategoryCard from '../components/CategoryCard'
+import { categorias as categoriasIniciales } from '../data/adminData'
 
 function Categorias() {
 
-  const categorias = [
-    {
-      id: 1,
-      nombre: 'Sobres sellados',
-      slug: 'sobres-sellados',
-      descripcion: 'Sobres de Pokémon, One Piece y otros TCG.'
-    },
-    {
-      id: 2,
-      nombre: 'Cartas individuales',
-      slug: 'cartas-individuales',
-      descripcion: 'Cartas individuales para jugadores y coleccionistas.'
-    },
-    {
-      id: 3,
-      nombre: 'Mazos',
-      slug: 'mazos',
-      descripcion: 'Mazos preparados para comenzar a jugar.'
-    },
-    {
-      id: 4,
-      nombre: 'Accesorios',
-      slug: 'accesorios',
-      descripcion: 'Protectores y accesorios para tus cartas.'
+  const categoriasGuardadas =
+    JSON.parse(localStorage.getItem('categorias')) ||
+    categoriasIniciales
+
+
+  const categorias = categoriasGuardadas.map(
+    (nombre, index) => {
+
+      const slug = nombre
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+
+      return {
+        id: index + 1,
+        nombre: nombre,
+        slug: slug,
+        descripcion: `Explora los productos disponibles en ${nombre}.`
+      }
     }
-  ]
+  )
+
 
   return (
     <main>
@@ -60,10 +58,12 @@ function Categorias() {
           <div className="two-col">
 
             {categorias.map(categoria => (
+
               <CategoryCard
                 key={categoria.id}
                 categoria={categoria}
               />
+
             ))}
 
           </div>

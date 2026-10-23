@@ -1,68 +1,181 @@
-import { productosCriticosEjemplo } from '../../data/adminData'
 import { Link } from 'react-router-dom'
 import {
-  productosIniciales as productos,
-  usuariosIniciales as usuarios,
-  ordenesIniciales as ordenes,
+  productosIniciales,
+  usuariosIniciales,
+  ordenesIniciales
 } from '../../data/adminData'
 
 function AdminDashboard() {
-  const productosCriticos = productosCriticosEjemplo
+
+  const sesion =
+    JSON.parse(localStorage.getItem('sesion'))
+
+
+  const productos =
+    JSON.parse(localStorage.getItem('productos')) ||
+    productosIniciales
+
+
+  const usuarios =
+    JSON.parse(localStorage.getItem('usuarios')) ||
+    usuariosIniciales
+
+
+  const ordenes =
+    JSON.parse(localStorage.getItem('ordenes')) ||
+    ordenesIniciales
+
+
+  const productosCriticos = productos.filter(
+    producto =>
+      producto.criticalStock !== null &&
+      producto.criticalStock !== '' &&
+      producto.stock <= producto.criticalStock
+  )
+
+
+  const totalVentas = ordenes.reduce(
+    (total, orden) =>
+      total + Number(orden.total),
+    0
+  )
+
 
   return (
     <>
+
       <div className="admin-title">
-        <h1>Hola, Administrador</h1>
-        <p>Panel principal de administración de PokeFoxx.</p>
+
+        <h1>
+          Hola, {sesion?.firstName || 'Usuario'}
+        </h1>
+
+        <p>
+          Panel principal de administración de PokeFoxx.
+        </p>
+
       </div>
+
 
       <div className="stat-grid">
-        <article className="stat-card">
-          <span>Productos</span>
-          <strong>{productos.length}</strong>
-        </article>
 
         <article className="stat-card">
-          <span>Usuarios</span>
-          <strong>{usuarios.length}</strong>
+
+          <span>
+            Productos
+          </span>
+
+          <strong>
+            {productos.length}
+          </strong>
+
         </article>
 
+
         <article className="stat-card">
-          <span>Órdenes</span>
-          <strong>{ordenes.length}</strong>
+
+          <span>
+            Usuarios
+          </span>
+
+          <strong>
+            {usuarios.length}
+          </strong>
+
         </article>
+
+
+        <article className="stat-card">
+
+          <span>
+            Órdenes
+          </span>
+
+          <strong>
+            {ordenes.length}
+          </strong>
+
+        </article>
+
+
+        <article className="stat-card">
+
+          <span>
+            Ventas
+          </span>
+
+          <strong>
+            ${totalVentas.toLocaleString('es-CL')}
+          </strong>
+
+        </article>
+
       </div>
 
+
       <section className="admin-section-grid">
-        <article className="content-card">
-          <span className="eyebrow">Inventario</span>
-          <h2>Stock crítico</h2>
-          <p>
-            Hay <strong>{productosCriticos.length}</strong> producto(s) cuyo
-            stock es igual o inferior al nivel crítico configurado.
-          </p>
-          <Link className="btn btn-primary" to="/admin/productos-criticos">
-            Ver productos críticos
-          </Link>
-        </article>
 
         <article className="content-card">
-          <span className="eyebrow">Datos locales</span>
-          <h2>Respaldo</h2>
+
+          <span className="eyebrow">
+            Inventario
+          </span>
+
+          <h2>
+            Stock crítico
+          </h2>
+
           <p>
-            Vista de demostración. Respaldo y persistencia pendientes de
-            implementar.
+            Hay{' '}
+            <strong>
+              {productosCriticos.length}
+            </strong>{' '}
+            producto(s) cuyo stock es igual o inferior
+            al nivel crítico configurado.
           </p>
-          <div className="admin-button-row">
-            <button className="btn btn-primary" type="button" disabled>
-              Descargar respaldo
-            </button>
-            <button className="btn btn-secondary" type="button" disabled>
-              Restablecer demo
-            </button>
-          </div>
+
+          <Link
+            className="btn btn-primary"
+            to="/admin/productos-criticos"
+          >
+            Ver productos críticos
+          </Link>
+
         </article>
+
+
+        <article className="content-card">
+
+          <span className="eyebrow">
+            Ventas
+          </span>
+
+          <h2>
+            Resumen de órdenes
+          </h2>
+
+          <p>
+            Se han registrado{' '}
+            <strong>
+              {ordenes.length}
+            </strong>{' '}
+            orden(es) por un total de{' '}
+            <strong>
+              ${totalVentas.toLocaleString('es-CL')}
+            </strong>.
+          </p>
+
+          <Link
+            className="btn btn-secondary"
+            to="/admin/ordenes"
+          >
+            Ver órdenes
+          </Link>
+
+        </article>
+
       </section>
+
     </>
   )
 }

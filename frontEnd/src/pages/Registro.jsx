@@ -30,54 +30,89 @@ function Registro() {
 
     event.preventDefault()
 
+    setMensaje('')
+
+
     const formulario = new FormData(event.target)
+
 
     const usuarios =
       JSON.parse(localStorage.getItem('usuarios')) ||
       usuariosIniciales
 
 
-    const run = formulario.get('run')
-    const email = formulario.get('email')
+    const run =
+      formulario.get('run').trim().toUpperCase()
+
+    const email =
+      formulario.get('email').trim()
 
 
     const runExiste = usuarios.some(
-      usuario => usuario.run === run
+      usuario =>
+        usuario.run.toUpperCase() === run
     )
+
 
     if (runExiste) {
 
       setTipoMensaje('error')
-      setMensaje('Ya existe una cuenta con ese RUN.')
+
+      setMensaje(
+        'Ya existe una cuenta con ese RUN.'
+      )
 
       return
     }
 
 
     const correoExiste = usuarios.some(
-      usuario => usuario.email === email
+      usuario =>
+        usuario.email.toLowerCase() ===
+        email.toLowerCase()
     )
+
 
     if (correoExiste) {
 
       setTipoMensaje('error')
-      setMensaje('Ya existe una cuenta con ese correo.')
+
+      setMensaje(
+        'Ya existe una cuenta con ese correo.'
+      )
 
       return
     }
 
 
     const nuevoUsuario = {
+
       run: run,
-      firstName: formulario.get('firstName'),
-      lastName: formulario.get('lastName'),
+
+      firstName:
+        formulario.get('firstName').trim(),
+
+      lastName:
+        formulario.get('lastName').trim(),
+
       email: email,
-      birthDate: formulario.get('birthDate'),
-      password: formulario.get('password'),
+
+      birthDate:
+        formulario.get('birthDate'),
+
+      password:
+        formulario.get('password'),
+
       role: 'Cliente',
-      region: regionSeleccionada,
-      commune: comunaSeleccionada,
-      address: formulario.get('address'),
+
+      region:
+        regionSeleccionada,
+
+      commune:
+        comunaSeleccionada,
+
+      address:
+        formulario.get('address').trim(),
     }
 
 
@@ -94,11 +129,16 @@ function Registro() {
 
 
     setTipoMensaje('success')
-    setMensaje('Cuenta creada correctamente. Ahora puedes iniciar sesión.')
+
+    setMensaje(
+      'Cuenta creada correctamente. Ahora puedes iniciar sesión.'
+    )
 
 
     setTimeout(() => {
+
       navigate('/login')
+
     }, 1500)
   }
 
@@ -265,6 +305,7 @@ function Registro() {
                     Selecciona una región
                   </option>
 
+
                   {regiones.map(item => (
 
                     <option
@@ -292,7 +333,9 @@ function Registro() {
                   name="commune"
                   value={comunaSeleccionada}
                   onChange={event =>
-                    setComunaSeleccionada(event.target.value)
+                    setComunaSeleccionada(
+                      event.target.value
+                    )
                   }
                   disabled={!regionSeleccionada}
                   required
@@ -301,6 +344,7 @@ function Registro() {
                   <option value="">
                     Selecciona una comuna
                   </option>
+
 
                   {comunas.map(comuna => (
 
@@ -339,9 +383,13 @@ function Registro() {
 
                 <div className="form-group full">
 
-                  <div className={`form-message ${tipoMensaje}`}>
+                  <div
+                    className={`form-message ${tipoMensaje}`}
+                  >
 
-                    {tipoMensaje === 'success' ? '✅' : '⚠️'}
+                    {tipoMensaje === 'success'
+                      ? '✅'
+                      : '⚠️'}
 
                     {' '}
 

@@ -8,10 +8,15 @@ function DetalleProducto() {
 
   const [cantidad, setCantidad] = useState(1)
 
+  const [mensaje, setMensaje] = useState('')
+  const [tipoMensaje, setTipoMensaje] = useState('')
+
+
   const [producto] = useState(() => {
 
     const productosGuardados =
-      JSON.parse(localStorage.getItem('productos')) || productosIniciales
+      JSON.parse(localStorage.getItem('productos')) ||
+      productosIniciales
 
     return productosGuardados.find(
       producto => producto.id === Number(id)
@@ -21,12 +26,39 @@ function DetalleProducto() {
 
   function agregarAlCarrito() {
 
-    if (cantidad < 1 || cantidad > producto.stock) {
+    setMensaje('')
+
+
+    if (
+      !Number.isInteger(cantidad) ||
+      cantidad < 1
+    ) {
+
+      setTipoMensaje('error')
+
+      setMensaje(
+        'Ingresa una cantidad válida.'
+      )
+
       return
     }
 
+
+    if (cantidad > producto.stock) {
+
+      setTipoMensaje('error')
+
+      setMensaje(
+        'No hay suficiente stock disponible.'
+      )
+
+      return
+    }
+
+
     const carrito =
       JSON.parse(localStorage.getItem('carrito')) || []
+
 
     const productoExistente = carrito.find(
       item => item.id === producto.id
@@ -40,15 +72,28 @@ function DetalleProducto() {
         productoExistente.cantidad ??
         1
 
+
       const nuevaCantidad =
         cantidadActual + cantidad
 
+
       if (nuevaCantidad > producto.stock) {
+
+        setTipoMensaje('error')
+
+        setMensaje(
+          'No puedes agregar más unidades que el stock disponible.'
+        )
+
         return
       }
 
-      productoExistente.quantity = nuevaCantidad
-      productoExistente.cantidad = nuevaCantidad
+
+      productoExistente.quantity =
+        nuevaCantidad
+
+      productoExistente.cantidad =
+        nuevaCantidad
 
     } else {
 
@@ -66,19 +111,30 @@ function DetalleProducto() {
       JSON.stringify(carrito)
     )
 
+
     window.dispatchEvent(
       new Event('carritoActualizado')
+    )
+
+
+    setTipoMensaje('success')
+
+    setMensaje(
+      'Producto añadido al carrito correctamente.'
     )
   }
 
 
   if (!producto) {
+
     return (
       <main className="container section">
 
         <div className="content-card empty-state">
 
-          <h2>Producto no encontrado</h2>
+          <h2>
+            Producto no encontrado
+          </h2>
 
           <p>
             El producto solicitado no existe.
@@ -106,11 +162,21 @@ function DetalleProducto() {
         <div className="container">
 
           <div className="breadcrumb">
-            <Link to="/">Inicio</Link>
+
+            <Link to="/">
+              Inicio
+            </Link>
+
             {' / '}
-            <Link to="/productos">Productos</Link>
+
+            <Link to="/productos">
+              Productos
+            </Link>
+
             {' / '}
+
             {producto.name}
+
           </div>
 
         </div>
@@ -140,45 +206,77 @@ function DetalleProducto() {
                 {producto.category}
               </span>
 
+
               <h1>
                 {producto.name}
               </h1>
+
 
               <p>
                 {producto.description}
               </p>
 
+
               <div className="price-large">
-                ${producto.price.toLocaleString('es-CL')}
+
+                $
+                {Number(
+                  producto.price
+                ).toLocaleString('es-CL')}
+
               </div>
+
 
               <p className="stock">
                 Stock disponible: {producto.stock}
               </p>
 
 
-              <div className="quantity-row">
+              {mensaje && (
 
-                <div className="form-group">
+                <div
+                  className={`form-message ${tipoMensaje}`}
+                  style={{
+                    marginBottom: '20px'
+                  }}
+                >
+                  {tipoMensaje === 'success'
+                    ? '✅'
+                    : '⚠️'}{' '}
+                  {mensaje}
+                </div>
 
-                  <label htmlFor="cantidad">
-                    Cantidad
-                  </label>
+              )}
 
-                  <input
-                    id="cantidad"
-                    type="number"
-                    min="1"
-                    max={producto.stock}
-                    value={cantidad}
-                    onChange={event =>
-                      setCantidad(Number(event.target.value))
-                    }
-                  />
+
+              {producto.stock > 0 && (
+
+                <div className="quantity-row">
+
+                  <div className="form-group">
+
+                    <label htmlFor="cantidad">
+                      Cantidad
+                    </label>
+
+                    <input
+                      id="cantidad"
+                      type="number"
+                      min="1"
+                      max={producto.stock}
+                      value={cantidad}
+                      onChange={event =>
+                        setCantidad(
+                          Number(event.target.value)
+                        )
+                      }
+                    />
+
+                  </div>
 
                 </div>
 
-              </div>
+              )}
 
 
               <button
@@ -187,7 +285,9 @@ function DetalleProducto() {
                 onClick={agregarAlCarrito}
                 disabled={producto.stock === 0}
               >
-                Añadir al carrito
+                {producto.stock === 0
+                  ? 'Sin stock'
+                  : 'Añadir al carrito'}
               </button>
 
             </div>

@@ -6,7 +6,8 @@ function AdminProductos() {
 
   const [productos, setProductos] = useState(() => {
 
-    const productosGuardados = localStorage.getItem('productos')
+    const productosGuardados =
+      localStorage.getItem('productos')
 
     if (productosGuardados) {
       return JSON.parse(productosGuardados)
@@ -21,20 +22,38 @@ function AdminProductos() {
   })
 
 
-  function eliminarProducto(id) {
+  const [productoAEliminar, setProductoAEliminar] =
+    useState(null)
 
-    const confirmar = window.confirm(
-      '¿Seguro que quieres eliminar este producto?'
-    )
+  const [mensaje, setMensaje] =
+    useState('')
 
-    if (!confirmar) {
+
+  function solicitarEliminar(producto) {
+
+    setMensaje('')
+    setProductoAEliminar(producto)
+  }
+
+
+  function cancelarEliminar() {
+
+    setProductoAEliminar(null)
+  }
+
+
+  function confirmarEliminar() {
+
+    if (!productoAEliminar) {
       return
     }
 
 
-    const productosActualizados = productos.filter(
-      producto => producto.id !== id
-    )
+    const productosActualizados =
+      productos.filter(
+        producto =>
+          producto.id !== productoAEliminar.id
+      )
 
 
     setProductos(productosActualizados)
@@ -44,11 +63,20 @@ function AdminProductos() {
       'productos',
       JSON.stringify(productosActualizados)
     )
+
+
+    setMensaje(
+      `Producto "${productoAEliminar.name}" eliminado correctamente.`
+    )
+
+
+    setProductoAEliminar(null)
   }
 
 
   return (
     <>
+
       <div className="admin-title">
 
         <h1>
@@ -76,6 +104,68 @@ function AdminProductos() {
         </Link>
 
       </div>
+
+
+      {mensaje && (
+
+        <div
+          className="form-message success"
+          style={{
+            marginBottom: '20px'
+          }}
+        >
+          ✅ {mensaje}
+        </div>
+
+      )}
+
+
+      {productoAEliminar && (
+
+        <div
+          className="content-card"
+          style={{
+            marginBottom: '20px'
+          }}
+        >
+
+          <h3>
+            ¿Eliminar producto?
+          </h3>
+
+          <p>
+            ¿Seguro que quieres eliminar{' '}
+            <strong>
+              {productoAEliminar.name}
+            </strong>
+            ?
+          </p>
+
+
+          <div className="admin-button-row">
+
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={confirmarEliminar}
+            >
+              Sí, eliminar
+            </button>
+
+
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={cancelarEliminar}
+            >
+              Cancelar
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
 
 
       <div className="table-wrap">
@@ -137,7 +227,9 @@ function AdminProductos() {
                     <button
                       className="btn btn-danger btn-sm"
                       type="button"
-                      onClick={() => eliminarProducto(producto.id)}
+                      onClick={() =>
+                        solicitarEliminar(producto)
+                      }
                     >
                       Eliminar
                     </button>
@@ -155,6 +247,7 @@ function AdminProductos() {
         </table>
 
       </div>
+
     </>
   )
 }

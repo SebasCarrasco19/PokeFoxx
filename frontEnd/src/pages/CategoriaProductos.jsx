@@ -1,91 +1,49 @@
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import {
+  productosIniciales,
+  categorias as categoriasIniciales
+} from '../data/adminData'
 
 function CategoriaProductos() {
 
   const { categoria } = useParams()
 
-  const productos = [
-    {
-      id: 1,
-      name: 'Ascended Heroes Booster Pack - ME: Ascended Heroes (ASC)',
-      price: 7990,
-      originalPrice: 9990,
-      onSale: true,
-      game: 'Pokémon',
-      stock: 8,
-      category: 'Sobres sellados',
-      categorySlug: 'sobres-sellados',
-      image: '/assets/img/sobre-pk.png'
-    },
-    {
-      id: 2,
-      name: 'Donquixote Doflamingo',
-      price: 7500,
-      originalPrice: 10000,
-      onSale: false,
-      game: 'One Piece',
-      stock: 5,
-      category: 'Cartas individuales',
-      categorySlug: 'cartas-individuales',
-      image: '/assets/img/doffy.png'
-    },
-    {
-      id: 3,
-      name: 'Monkey.D.Luffy (OP05-119)',
-      price: 600000,
-      originalPrice: 800000,
-      onSale: true,
-      game: 'One Piece',
-      stock: 10,
-      category: 'Cartas individuales',
-      categorySlug: 'cartas-individuales',
-      image: '/assets/img/Monkey.D.Luffy (OP05-119).jpg'
-    },
-    {
-      id: 4,
-      name: 'Pikachu - 042/128 - ME: 30th Celebration (30C)',
-      price: 4990,
-      originalPrice: 4990,
-      onSale: false,
-      game: 'Pokémon',
-      stock: 24,
-      category: 'Sobres sellados',
-      categorySlug: 'sobres-sellados',
-      image: '/assets/img/pikachu.png'
-    },
-    {
-      id: 5,
-      name: 'Starter Deck',
-      price: 18990,
-      originalPrice: 21990,
-      onSale: true,
-      game: 'One Piece',
-      stock: 6,
-      category: 'Mazos',
-      categorySlug: 'mazos'
-    },
-    {
-      id: 6,
-      name: 'Protectores TCG',
-      price: 6990,
-      originalPrice: 6990,
-      onSale: false,
-      game: 'Magic',
-      stock: 30,
-      category: 'Accesorios',
-      categorySlug: 'accesorios'
-    }
-  ]
 
-  const productosCategoria = productos.filter(
-    producto => producto.categorySlug === categoria
-  )
+  function crearSlug(texto) {
+
+    return texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '-')
+  }
+
+
+  const productos =
+    JSON.parse(localStorage.getItem('productos')) ||
+    productosIniciales
+
+
+  const categorias =
+    JSON.parse(localStorage.getItem('categorias')) ||
+    categoriasIniciales
+
 
   const nombreCategoria =
-    productosCategoria.length > 0
-      ? productosCategoria[0].category
-      : 'Categoría'
+    categorias.find(
+      nombre => crearSlug(nombre) === categoria
+    )
+
+
+  const productosCategoria =
+    nombreCategoria
+      ? productos.filter(
+          producto =>
+            producto.category === nombreCategoria
+        )
+      : []
+
 
   return (
     <main>
@@ -108,20 +66,25 @@ function CategoriaProductos() {
 
             {' / '}
 
-            {nombreCategoria}
+            {nombreCategoria || 'Categoría'}
 
           </div>
+
 
           <span className="eyebrow">
             Categoría
           </span>
 
+
           <h1>
-            {nombreCategoria}
+            {nombreCategoria || 'Categoría no encontrada'}
           </h1>
 
+
           <p>
-            Productos disponibles en esta categoría.
+            {nombreCategoria
+              ? 'Productos disponibles en esta categoría.'
+              : 'La categoría solicitada no existe.'}
           </p>
 
         </div>
@@ -138,10 +101,12 @@ function CategoriaProductos() {
             <div className="product-grid">
 
               {productosCategoria.map(producto => (
+
                 <ProductCard
                   key={producto.id}
                   producto={producto}
                 />
+
               ))}
 
             </div>
@@ -151,12 +116,18 @@ function CategoriaProductos() {
             <div className="content-card empty-state">
 
               <h2>
-                No hay productos
+                {nombreCategoria
+                  ? 'No hay productos'
+                  : 'Categoría no encontrada'}
               </h2>
 
+
               <p>
-                No encontramos productos para esta categoría.
+                {nombreCategoria
+                  ? 'Todavía no hay productos registrados en esta categoría.'
+                  : 'La categoría que intentas visitar no existe.'}
               </p>
+
 
               <Link
                 className="btn btn-primary"

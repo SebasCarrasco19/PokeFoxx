@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 function BlogDetalle2() {
+
   return (
     <main>
 
@@ -26,13 +27,16 @@ function BlogDetalle2() {
 
           </div>
 
+
           <span className="eyebrow">
             Blog
           </span>
 
+
           <h1>
             Consejos para comenzar tu colección
           </h1>
+
 
           <p>
             Algunas recomendaciones para comenzar
@@ -55,7 +59,7 @@ function BlogDetalle2() {
               <iframe
                 src="https://www.tiktok.com/player/v1/7413170565210557701"
                 title="Video sobre colección TCG"
-                allow="fullscreen"
+                allowFullScreen
               />
 
             </div>
@@ -79,6 +83,7 @@ function BlogDetalle2() {
               Puedes comenzar con Pokémon, One Piece,
               Magic: The Gathering u otros juegos.
             </p>
+
 
             <h2>
               Organiza tu colección

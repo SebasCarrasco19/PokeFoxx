@@ -13,10 +13,18 @@ function Login() {
 
     event.preventDefault()
 
-    const formulario = new FormData(event.target)
+    setMensaje('')
 
-    const email = formulario.get('email').trim()
-    const password = formulario.get('password')
+
+    const formulario =
+      new FormData(event.target)
+
+
+    const email =
+      formulario.get('email').trim()
+
+    const password =
+      formulario.get('password')
 
 
     const usuarios =
@@ -24,27 +32,41 @@ function Login() {
       usuariosIniciales
 
 
-    const usuarioEncontrado = usuarios.find(
-      usuario =>
-        usuario.email.toLowerCase() === email.toLowerCase() &&
-        usuario.password === password
-    )
+    const usuarioEncontrado =
+      usuarios.find(
+        usuario =>
+          usuario.email.toLowerCase() ===
+            email.toLowerCase() &&
+          usuario.password === password
+      )
 
 
     if (!usuarioEncontrado) {
 
-      setMensaje('Correo o contraseña incorrectos.')
+      setMensaje(
+        'Correo o contraseña incorrectos.'
+      )
 
       return
     }
 
 
     const sesion = {
-      run: usuarioEncontrado.run,
-      firstName: usuarioEncontrado.firstName,
-      lastName: usuarioEncontrado.lastName,
-      email: usuarioEncontrado.email,
-      role: usuarioEncontrado.role,
+
+      run:
+        usuarioEncontrado.run,
+
+      firstName:
+        usuarioEncontrado.firstName,
+
+      lastName:
+        usuarioEncontrado.lastName,
+
+      email:
+        usuarioEncontrado.email,
+
+      role:
+        usuarioEncontrado.role,
     }
 
 
@@ -118,7 +140,9 @@ function Login() {
 
             <div
               className="form-group"
-              style={{ marginTop: '18px' }}
+              style={{
+                marginTop: '18px'
+              }}
             >
 
               <label htmlFor="password">
@@ -141,7 +165,9 @@ function Login() {
 
               <div
                 className="form-message error"
-                style={{ marginTop: '18px' }}
+                style={{
+                  marginTop: '18px'
+                }}
               >
 
                 ⚠️ {mensaje}

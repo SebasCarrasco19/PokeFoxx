@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import CheckoutForm from '../components/CheckoutForm'
+
 import {
   productosIniciales,
   ordenesIniciales,
@@ -11,12 +12,15 @@ function Checkout() {
 
   const navigate = useNavigate()
 
+
   const sesion =
     JSON.parse(localStorage.getItem('sesion'))
+
 
   const usuarios =
     JSON.parse(localStorage.getItem('usuarios')) ||
     usuariosIniciales
+
 
   const usuario = sesion
     ? usuarios.find(
@@ -26,33 +30,67 @@ function Checkout() {
 
 
   const [datos, setDatos] = useState({
+
     nombre: usuario
       ? `${usuario.firstName} ${usuario.lastName}`
       : '',
 
-    correo: usuario?.email || '',
+    correo:
+      usuario?.email || '',
 
-    direccion: usuario?.address || '',
+    direccion:
+      usuario?.address || '',
 
-    comuna: usuario?.commune || '',
+    comuna:
+      usuario?.commune || '',
 
     metodoPago: ''
   })
 
 
-  const [mensaje, setMensaje] = useState('')
+  const [mensaje, setMensaje] =
+    useState('')
 
 
   function cambiarDato(event) {
 
-    const { name, value } = event.target
+    const { name, value } =
+      event.target
+
 
     setDatos({
       ...datos,
       [name]: value
     })
 
+
     setMensaje('')
+  }
+
+
+  function obtenerFechaActual() {
+
+    const fecha =
+      new Date()
+
+
+    const año =
+      fecha.getFullYear()
+
+
+    const mes =
+      String(
+        fecha.getMonth() + 1
+      ).padStart(2, '0')
+
+
+    const dia =
+      String(
+        fecha.getDate()
+      ).padStart(2, '0')
+
+
+    return `${año}-${mes}-${dia}`
   }
 
 
@@ -64,12 +102,16 @@ function Checkout() {
 
 
     const carrito =
-      JSON.parse(localStorage.getItem('carrito')) || []
+      JSON.parse(
+        localStorage.getItem('carrito')
+      ) || []
 
 
     if (carrito.length === 0) {
 
-      setMensaje('Tu carrito está vacío.')
+      setMensaje(
+        'Tu carrito está vacío.'
+      )
 
       return
     }
@@ -77,47 +119,74 @@ function Checkout() {
 
     if (!datos.metodoPago) {
 
-      setMensaje('Selecciona un método de pago.')
+      setMensaje(
+        'Selecciona un método de pago.'
+      )
 
       return
     }
 
 
+    const nombre =
+      datos.nombre.trim()
+
+    const correo =
+      datos.correo.trim()
+
+    const direccion =
+      datos.direccion.trim()
+
+    const comuna =
+      datos.comuna.trim()
+
+
     if (
       !usuario &&
       (
-        !datos.nombre ||
-        !datos.correo ||
-        !datos.direccion ||
-        !datos.comuna
+        !nombre ||
+        !correo ||
+        !direccion ||
+        !comuna
       )
     ) {
 
-      setMensaje('Completa todos los datos de la compra.')
+      setMensaje(
+        'Completa todos los datos de la compra.'
+      )
 
       return
     }
 
 
     const productos =
-      JSON.parse(localStorage.getItem('productos')) ||
+      JSON.parse(
+        localStorage.getItem('productos')
+      ) ||
       productosIniciales
 
 
-    const stockSuficiente = carrito.every(item => {
+    const stockSuficiente =
+      carrito.every(item => {
 
-      const producto = productos.find(
-        producto => producto.id === item.id
-      )
+        const producto =
+          productos.find(
+            producto =>
+              producto.id === item.id
+          )
 
-      const cantidad =
-        item.cantidad ?? item.quantity ?? 1
 
-      return (
-        producto &&
-        producto.stock >= cantidad
-      )
-    })
+        const cantidad =
+          item.cantidad ??
+          item.quantity ??
+          1
+
+
+        return (
+          producto &&
+          cantidad > 0 &&
+          producto.stock >= cantidad
+        )
+      })
 
 
     if (!stockSuficiente) {
@@ -128,85 +197,127 @@ function Checkout() {
     }
 
 
-    const productosActualizados = productos.map(producto => {
+    const productosActualizados =
+      productos.map(producto => {
 
-      const itemCarrito = carrito.find(
-        item => item.id === producto.id
-      )
+        const itemCarrito =
+          carrito.find(
+            item =>
+              item.id === producto.id
+          )
 
-      if (itemCarrito) {
 
-        const cantidad =
-          itemCarrito.cantidad ??
-          itemCarrito.quantity ??
-          1
+        if (itemCarrito) {
 
-        return {
-          ...producto,
-          stock: producto.stock - cantidad
+          const cantidad =
+            itemCarrito.cantidad ??
+            itemCarrito.quantity ??
+            1
+
+
+          return {
+            ...producto,
+            stock:
+              producto.stock - cantidad
+          }
         }
-      }
 
-      return producto
-    })
+
+        return producto
+      })
 
 
     localStorage.setItem(
       'productos',
-      JSON.stringify(productosActualizados)
+      JSON.stringify(
+        productosActualizados
+      )
     )
 
 
-    const total = carrito.reduce(
-      (acumulador, item) => {
+    const total =
+      carrito.reduce(
+        (acumulador, item) => {
 
-        const cantidad =
-          item.cantidad ?? item.quantity ?? 1
+          const cantidad =
+            item.cantidad ??
+            item.quantity ??
+            1
 
-        return (
-          acumulador +
-          item.price * cantidad
-        )
-      },
-      0
-    )
+
+          return (
+            acumulador +
+            Number(item.price) * cantidad
+          )
+        },
+        0
+      )
 
 
     const ordenes =
-      JSON.parse(localStorage.getItem('ordenes')) ||
+      JSON.parse(
+        localStorage.getItem('ordenes')
+      ) ||
       ordenesIniciales
 
 
     const nuevaOrden = {
 
-      id: `ORD-${Date.now()}`,
+      id:
+        `ORD-${Date.now()}`,
 
-      customer: datos.nombre,
+      customer:
+        usuario
+          ? `${usuario.firstName} ${usuario.lastName}`
+          : nombre,
 
-      customerEmail: datos.correo,
+      customerEmail:
+        usuario
+          ? usuario.email
+          : correo,
 
-      customerRun: usuario?.run || null,
+      customerRun:
+        usuario?.run || null,
 
-      address: datos.direccion,
+      address:
+        usuario
+          ? usuario.address
+          : direccion,
 
-      commune: datos.comuna,
+      commune:
+        usuario
+          ? usuario.commune
+          : comuna,
 
-      paymentMethod: datos.metodoPago,
+      paymentMethod:
+        datos.metodoPago,
 
-      date: new Date()
-        .toISOString()
-        .split('T')[0],
+      date:
+        obtenerFechaActual(),
 
-      total: total,
+      total:
+        total,
 
-      status: 'Pendiente',
+      status:
+        'Pendiente',
 
-      items: carrito.map(item => ({
-        productId: item.id,
-        name: item.name,
-        qty: item.cantidad ?? item.quantity ?? 1,
-        price: item.price
-      }))
+      items:
+        carrito.map(item => ({
+
+          productId:
+            item.id,
+
+          name:
+            item.name,
+
+          qty:
+            item.cantidad ??
+            item.quantity ??
+            1,
+
+          price:
+            Number(item.price)
+        }))
     }
 
 
@@ -218,11 +329,21 @@ function Checkout() {
 
     localStorage.setItem(
       'ordenes',
-      JSON.stringify(ordenesActualizadas)
+      JSON.stringify(
+        ordenesActualizadas
+      )
     )
 
 
-    localStorage.removeItem('carrito')
+    localStorage.setItem(
+      'ultimaOrdenId',
+      nuevaOrden.id
+    )
+
+
+    localStorage.removeItem(
+      'carrito'
+    )
 
 
     window.dispatchEvent(

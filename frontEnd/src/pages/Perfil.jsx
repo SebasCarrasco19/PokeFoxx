@@ -6,13 +6,18 @@ import {
 
 function Perfil() {
 
-  const sesion = JSON.parse(
-    localStorage.getItem('sesion')
-  )
+  const sesion =
+    JSON.parse(localStorage.getItem('sesion'))
 
 
   if (!sesion) {
-    return <Navigate to="/login" />
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    )
   }
 
 
@@ -21,12 +26,14 @@ function Perfil() {
     usuariosIniciales
 
 
-  const usuario = usuarios.find(
-    item => item.run === sesion.run
-  )
+  const usuario =
+    usuarios.find(
+      item => item.run === sesion.run
+    )
 
 
   if (!usuario) {
+
     return (
       <main>
 
@@ -39,6 +46,10 @@ function Perfil() {
               <h1>
                 Usuario no encontrado
               </h1>
+
+              <p>
+                No fue posible encontrar los datos de esta cuenta.
+              </p>
 
               <Link
                 className="btn btn-primary"
@@ -63,11 +74,20 @@ function Perfil() {
     ordenesIniciales
 
 
-  const pedidos = ordenes.filter(
-    orden =>
-      orden.customerEmail?.toLowerCase() ===
-      usuario.email.toLowerCase()
-  )
+  const pedidos =
+    ordenes.filter(orden => {
+
+      if (orden.customerRun) {
+
+        return orden.customerRun === usuario.run
+      }
+
+
+      return (
+        orden.customerEmail?.toLowerCase() ===
+        usuario.email.toLowerCase()
+      )
+    })
 
 
   return (
@@ -107,37 +127,56 @@ function Perfil() {
 
 
             <p>
-              <strong>Nombre:</strong>{' '}
-              {usuario.firstName} {usuario.lastName}
+              <strong>
+                Nombre:
+              </strong>{' '}
+
+              {usuario.firstName}{' '}
+              {usuario.lastName}
             </p>
 
 
             <p>
-              <strong>Correo:</strong>{' '}
+              <strong>
+                Correo:
+              </strong>{' '}
+
               {usuario.email}
             </p>
 
 
             <p>
-              <strong>RUN:</strong>{' '}
+              <strong>
+                RUN:
+              </strong>{' '}
+
               {usuario.run}
             </p>
 
 
             <p>
-              <strong>Región:</strong>{' '}
+              <strong>
+                Región:
+              </strong>{' '}
+
               {usuario.region}
             </p>
 
 
             <p>
-              <strong>Comuna:</strong>{' '}
+              <strong>
+                Comuna:
+              </strong>{' '}
+
               {usuario.commune}
             </p>
 
 
             <p>
-              <strong>Dirección:</strong>{' '}
+              <strong>
+                Dirección:
+              </strong>{' '}
+
               {usuario.address}
             </p>
 
@@ -168,7 +207,8 @@ function Perfil() {
                   style={{
                     marginBottom: '20px',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid var(--border)'
+                    borderBottom:
+                      '1px solid var(--border)'
                   }}
                 >
 
@@ -186,7 +226,9 @@ function Perfil() {
 
                   <p>
                     Total: $
-                    {Number(pedido.total).toLocaleString('es-CL')}
+                    {Number(
+                      pedido.total
+                    ).toLocaleString('es-CL')}
                   </p>
 
 
