@@ -9,9 +9,12 @@ function ProductosCriticos() {
 
   const productosCriticos = productos.filter(
     producto =>
-      producto.criticalStock !== null &&
-      producto.criticalStock !== '' &&
-      producto.stock <= producto.criticalStock
+      producto.stock === 0 ||
+      (
+        producto.criticalStock !== null &&
+        producto.criticalStock !== '' &&
+        producto.stock <= producto.criticalStock
+      )
   )
 
   return (

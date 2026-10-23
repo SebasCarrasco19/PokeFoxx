@@ -1,13 +1,6 @@
 import { useState } from 'react'
-import {
-  Link,
-  useNavigate,
-  useParams
-} from 'react-router-dom'
-import {
-  usuariosIniciales,
-  regiones
-} from '../../data/adminData'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { usuariosIniciales, regiones } from '../../data/adminData'
 
 const formularioVacio = {
   run: '',
@@ -19,11 +12,40 @@ const formularioVacio = {
   role: '',
   region: '',
   commune: '',
-  address: '',
+  address: ''
+}
+
+function validarRun(run) {
+  const runLimpio = run.trim().toUpperCase()
+
+  if (!/^\d{6,8}[0-9K]$/.test(runLimpio)) {
+    return false
+  }
+
+  const cuerpo = runLimpio.slice(0, -1)
+  const dvIngresado = runLimpio.slice(-1)
+
+  let suma = 0
+  let multiplicador = 2
+
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += Number(cuerpo[i]) * multiplicador
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1
+  }
+
+  const resultado = 11 - (suma % 11)
+
+  const dvCalculado =
+    resultado === 11
+      ? '0'
+      : resultado === 10
+        ? 'K'
+        : String(resultado)
+
+  return dvIngresado === dvCalculado
 }
 
 function AdminUsuarioForm() {
-
   const { run } = useParams()
   const navigate = useNavigate()
 
@@ -38,140 +60,107 @@ function AdminUsuarioForm() {
   const datos = usuarioActual ?? formularioVacio
   const editando = Boolean(run)
 
-
   const [regionSeleccionada, setRegionSeleccionada] =
     useState(datos.region)
 
   const [comunaSeleccionada, setComunaSeleccionada] =
     useState(datos.commune)
 
-  const [mensaje, setMensaje] =
-    useState('')
-
+  const [mensaje, setMensaje] = useState('')
 
   const comunas =
     regiones.find(
       item => item.region === regionSeleccionada
     )?.comunas ?? []
 
-
   function cambiarRegion(event) {
-
     setRegionSeleccionada(event.target.value)
     setComunaSeleccionada('')
   }
 
-
   function guardarUsuario(event) {
-
     event.preventDefault()
-
     setMensaje('')
 
-    const formulario =
-      new FormData(event.target)
-
+    const formulario = new FormData(event.target)
 
     const runUsuario = editando
       ? run
-      : formulario.get('run')
+      : formulario.get('run').trim().toUpperCase()
 
+    if (!validarRun(runUsuario)) {
+      setMensaje('El RUN ingresado no es válido.')
+      return
+    }
 
     if (!editando) {
-
       const runExiste = usuarios.some(
-        usuario => usuario.run === runUsuario
+        usuario =>
+          usuario.run.toUpperCase() === runUsuario
       )
 
       if (runExiste) {
-
-        setMensaje(
-          'Ya existe un usuario con ese RUN.'
-        )
-
+        setMensaje('Ya existe un usuario con ese RUN.')
         return
       }
     }
 
-
     const correo =
       formulario.get('email').trim()
 
-
     const correoExiste = usuarios.some(
       usuario =>
-        usuario.email.toLowerCase() ===
-          correo.toLowerCase() &&
+        usuario.email.toLowerCase() === correo.toLowerCase() &&
         usuario.run !== run
     )
+    const dominioValido =
+      /@(gmail\.com|duoc\.cl|profesor\.duoc\.cl)$/i.test(correo)
 
-
-    if (correoExiste) {
-
+    if (!dominioValido) {
       setMensaje(
-        'Ya existe un usuario con ese correo.'
+        'El correo debe ser @gmail.com, @duoc.cl o @profesor.duoc.cl.'
       )
-
+      return
+    }
+    
+    if (correoExiste) {
+      setMensaje('Ya existe un usuario con ese correo.')
       return
     }
 
-
     const usuarioGuardado = {
       run: runUsuario,
-      firstName: formulario.get('firstName'),
-      lastName: formulario.get('lastName'),
+      firstName: formulario.get('firstName').trim(),
+      lastName: formulario.get('lastName').trim(),
       email: correo,
       birthDate: formulario.get('birthDate'),
       password: formulario.get('password'),
       role: formulario.get('role'),
       region: regionSeleccionada,
       commune: comunaSeleccionada,
-      address: formulario.get('address'),
+      address: formulario.get('address').trim()
     }
 
-
-    let usuariosActualizados
-
-
-    if (editando) {
-
-      usuariosActualizados =
-        usuarios.map(usuario => {
-
-          if (usuario.run === run) {
-            return usuarioGuardado
-          }
-
-          return usuario
-        })
-
-    } else {
-
-      usuariosActualizados = [
-        ...usuarios,
-        usuarioGuardado
-      ]
-    }
-
+    const usuariosActualizados = editando
+      ? usuarios.map(usuario =>
+        usuario.run === run
+          ? usuarioGuardado
+          : usuario
+      )
+      : [...usuarios, usuarioGuardado]
 
     localStorage.setItem(
       'usuarios',
       JSON.stringify(usuariosActualizados)
     )
 
-
     navigate('/admin/usuarios')
   }
 
-
   if (editando && !usuarioActual) {
-
     return (
       <div className="content-card">
-
-        <h1>
-          Usuario no encontrado
-        </h1>
+        <h1>Usuario no encontrado</h1>
 
         <Link
           className="btn btn-primary"
@@ -179,21 +168,15 @@ function AdminUsuarioForm() {
         >
           Volver a usuarios
         </Link>
-
       </div>
     )
   }
 
-
   return (
     <>
-
       <div className="admin-title">
-
         <h1>
-          {editando
-            ? 'Editar usuario'
-            : 'Nuevo usuario'}
+          {editando ? 'Editar usuario' : 'Nuevo usuario'}
         </h1>
 
         <p>
@@ -201,38 +184,26 @@ function AdminUsuarioForm() {
             ? 'Modifica los datos del usuario.'
             : 'Completa los datos para registrar un nuevo usuario.'}
         </p>
-
       </div>
-
 
       <form
         className="content-card admin-form"
         key={run ?? 'nuevo'}
         onSubmit={guardarUsuario}
       >
-
         {mensaje && (
-
           <div
             className="form-message error"
-            style={{
-              marginBottom: '20px'
-            }}
+            style={{ marginBottom: '20px' }}
           >
             ⚠️ {mensaje}
           </div>
-
         )}
-
 
         <div className="form-grid">
 
-
           <div className="form-group">
-
-            <label htmlFor="run">
-              RUN
-            </label>
+            <label htmlFor="run">RUN</label>
 
             <input
               id="run"
@@ -244,15 +215,10 @@ function AdminUsuarioForm() {
               readOnly={editando}
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="firstName">
-              Nombre
-            </label>
+            <label htmlFor="firstName">Nombre</label>
 
             <input
               id="firstName"
@@ -261,15 +227,10 @@ function AdminUsuarioForm() {
               maxLength="50"
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="lastName">
-              Apellidos
-            </label>
+            <label htmlFor="lastName">Apellidos</label>
 
             <input
               id="lastName"
@@ -278,15 +239,10 @@ function AdminUsuarioForm() {
               maxLength="100"
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="email">
-              Correo
-            </label>
+            <label htmlFor="email">Correo</label>
 
             <input
               id="email"
@@ -296,12 +252,9 @@ function AdminUsuarioForm() {
               maxLength="100"
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
             <label htmlFor="birthDate">
               Fecha de nacimiento
             </label>
@@ -313,15 +266,10 @@ function AdminUsuarioForm() {
               defaultValue={datos.birthDate}
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="password">
-              Contraseña
-            </label>
+            <label htmlFor="password">Contraseña</label>
 
             <input
               id="password"
@@ -332,15 +280,10 @@ function AdminUsuarioForm() {
               maxLength="10"
               required
             />
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="role">
-              Tipo de usuario
-            </label>
+            <label htmlFor="role">Tipo de usuario</label>
 
             <select
               id="role"
@@ -348,33 +291,15 @@ function AdminUsuarioForm() {
               defaultValue={datos.role}
               required
             >
-
-              <option value="">
-                Selecciona un perfil
-              </option>
-
-              <option value="Administrador">
-                Administrador
-              </option>
-
-              <option value="Cliente">
-                Cliente
-              </option>
-
-              <option value="Vendedor">
-                Vendedor
-              </option>
-
+              <option value="">Selecciona un perfil</option>
+              <option value="Administrador">Administrador</option>
+              <option value="Cliente">Cliente</option>
+              <option value="Vendedor">Vendedor</option>
             </select>
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="region">
-              Región
-            </label>
+            <label htmlFor="region">Región</label>
 
             <select
               id="region"
@@ -383,71 +308,48 @@ function AdminUsuarioForm() {
               onChange={cambiarRegion}
               required
             >
-
               <option value="">
                 Selecciona una región
               </option>
 
               {regiones.map(item => (
-
                 <option
                   key={item.region}
                   value={item.region}
                 >
                   {item.region}
                 </option>
-
               ))}
-
             </select>
-
           </div>
 
-
           <div className="form-group">
-
-            <label htmlFor="commune">
-              Comuna
-            </label>
+            <label htmlFor="commune">Comuna</label>
 
             <select
               id="commune"
               name="commune"
               value={comunaSeleccionada}
               onChange={event =>
-                setComunaSeleccionada(
-                  event.target.value
-                )
+                setComunaSeleccionada(event.target.value)
               }
               disabled={!regionSeleccionada}
               required
             >
-
               <option value="">
                 Selecciona una comuna
               </option>
 
               {comunas.map(comuna => (
-
-                <option
-                  key={comuna}
-                  value={comuna}
-                >
+                <option key={comuna} value={comuna}>
                   {comuna}
                 </option>
-
               ))}
-
             </select>
-
           </div>
 
-
           <div className="form-group full">
-
-            <label htmlFor="address">
-              Dirección
-            </label>
+            <label htmlFor="address">Dirección</label>
 
             <input
               id="address"
@@ -456,14 +358,11 @@ function AdminUsuarioForm() {
               maxLength="300"
               required
             />
-
           </div>
 
         </div>
 
-
         <div className="admin-button-row">
-
           <button
             className="btn btn-primary"
             type="submit"
@@ -477,11 +376,8 @@ function AdminUsuarioForm() {
           >
             Volver
           </Link>
-
         </div>
-
       </form>
-
     </>
   )
 }
