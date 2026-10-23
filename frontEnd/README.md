@@ -1,72 +1,508 @@
-# PokeFoxx — etapa de vistas React
+# PokeFoxx — TCG Market
 
-Reorganización de PokeFoxx-Chemy-admin.zip. Esta entrega corresponde a estructura y vistas, no a la implementación funcional completa de Evaluación 2.
+Proyecto académico desarrollado para la asignatura **DSY1104 - Desarrollo Fullstack II**.
 
-## Ejecutar
+PokeFoxx es una tienda online de cartas, accesorios y productos TCG. La versión actual corresponde a la evolución del proyecto original desarrollado en HTML, CSS y JavaScript, migrado posteriormente a **React con Vite** e incorporando nuevas funcionalidades, persistencia mediante `localStorage`, roles de usuario, administración y pruebas unitarias.
 
-Requiere Node.js compatible con Vite 8 (verificado con Node 26.11.1).
+---
 
-```sh
-npm ci
+## Tecnologías utilizadas
+
+- React
+- Vite
+- React Router
+- Bootstrap
+- JavaScript
+- HTML5
+- CSS3
+- localStorage
+- Vitest
+- React Testing Library
+- jsdom
+- @testing-library/jest-dom
+- @testing-library/user-event
+- @vitest/coverage-v8
+
+---
+
+## Estructura del repositorio
+
+La implementación actual en React se encuentra principalmente en:
+
+```text
+frontEnd/
+├── src/
+│   ├── components/
+│   ├── data/
+│   ├── layouts/
+│   ├── pages/
+│   │   └── admin/
+│   ├── test/
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── setupTests.js
+├── package.json
+└── vite.config.js
+```
+
+El repositorio conserva además archivos HTML, CSS y JavaScript correspondientes a etapas anteriores del proyecto.
+
+---
+
+## Instalación y ejecución
+
+Ingresa a la carpeta del frontend:
+
+```bash
+cd frontEnd
+```
+
+Instala las dependencias:
+
+```bash
+npm install
+```
+
+Ejecuta el proyecto:
+
+```bash
 npm run dev
 ```
 
-Abrir la dirección que muestre Vite. Tienda: `/`. Administración: `/admin`. Perfil de ejemplo: `/perfil`. No hace falta iniciar sesión: todavía no hay autenticación ni control de roles.
-
-```sh
-npm run build
-npm run preview
-```
-
-No abrir index.html con doble clic: la aplicación necesita el servidor de Vite. Un alojamiento futuro debe redirigir las rutas a index.html para permitir recargas directas con BrowserRouter.
-
-## Organización
+Vite mostrará la dirección local donde se encuentra disponible la aplicación, normalmente:
 
 ```text
-src/
-  App.jsx                 Rutas de tienda y administración
-  main.jsx                React, BrowserRouter, Bootstrap y estilos
-  layouts/
-    TiendaLayout.jsx      Header, Outlet y Footer
-    AdminLayout.jsx       AdminNav, AdminHeader y Outlet
-  components/             Piezas visuales reutilizables
-  pages/                  Vistas de tienda
-    admin/                Todas las vistas administrativas
-  data/adminData.js       Datos estáticos existentes
-  css/                    Estilos de tienda, admin y cuenta
-public/assets/img/        Imágenes existentes
- docs/referencias/        Documentos del ZIP original
+http://localhost:5173
 ```
 
-La aplicación está en la raíz, sin una segunda tienda HTML ni scripts antiguos en paralelo. El único index.html es el punto de entrada de React. Se conservaron imágenes, Bootstrap y estilos; el menú admin tiene un ajuste de desplazamiento para alojar las nuevas opciones sin superponerse.
+---
 
-## Cambios
+# Funcionalidades principales
 
-- Separación de tienda y admin mediante layouts con Outlet.
-- Páginas admin en src/pages/admin/, imports corregidos y navegación/cabecera extraídas del diseño original.
-- Eliminado AdminDataContext.jsx, su proveedor y context/ tras retirar todas sus referencias. Las vistas importan arreglos estáticos directamente.
-- Formularios, eliminación, respaldo y exportación como presentación, sin guardar ni modificar registros.
-- Productos críticos mediante selección fija de los dos ejemplos existentes, sin cálculo automático de inventario.
-- Vistas mínimas del diagrama: categorías y formulario, detalle de producto, detalle de usuario, historial de compras, reportes y perfil del administrador.
-- Completadas las vistas de editar perfil y detalle de pedido de tienda; detalle de producto con datos e imágenes existentes.
-- Página para rutas inexistentes y mensajes para identificadores no encontrados.
+## Tienda pública
 
-## Alcance actual
+La aplicación cuenta con:
 
-La navegación, el menú móvil y los filtros visuales existentes pueden responder. Los formularios permiten escribir como maqueta, pero no guardan. El carrito muestra una selección fija y sus botones de modificación están deshabilitados. Checkout permite visitar los ejemplos de éxito/error sin procesar una compra.
+- Página de inicio.
+- Listado general de productos.
+- Detalle individual de productos.
+- Categorías.
+- Productos filtrados por categoría.
+- Ofertas.
+- Carrito de compras.
+- Checkout.
+- Compra como usuario registrado.
+- Compra como invitado.
+- Página de pago realizado correctamente.
+- Página de error de compra.
+- Registro de usuarios.
+- Inicio de sesión.
+- Perfil del cliente.
+- Edición de perfil.
+- Historial de pedidos.
+- Detalle de pedidos.
+- Blog.
+- Detalle de publicaciones.
+- Nosotros.
+- Contacto.
+- Página para rutas no encontradas.
 
-No hay localStorage, CRUD real, cambios de stock, órdenes generadas o sincronizadas, autenticación, roles efectivos, backend ni configuración de tests. Reportes e historiales son ejemplos estáticos. Los datos de tienda y admin no representan una fuente persistida compartida.
+---
 
-Las vistas añadidas siguen el diagrama de Evaluación 2. Sus requisitos funcionales y de tests quedan pendientes de la siguiente etapa por el alcance solicitado. No se utilizó código de luz_de_plata.
+## Carrito de compras
 
-## Verificación
+El carrito permite:
 
-- npm ci, npm run build y npm run lint completados.
-- Recorrido de enlaces en navegador sin errores de consola ni imágenes rotas.
-- Rutas inexistentes y registros no encontrados comprobados.
-- Revisión a 390 px de inicio, admin, productos admin y editar perfil sin desbordamiento horizontal.
-- Navegación sin escrituras en localStorage.
+- Agregar productos.
+- Aumentar cantidades.
+- Disminuir cantidades.
+- Eliminar productos.
+- Vaciar el carrito.
+- Calcular subtotales y total.
+- Mantener sus datos mediante `localStorage`.
+- Impedir cantidades superiores al stock disponible.
+- Impedir agregar productos sin stock.
 
-La comprobación de navegación se hizo fuera del proyecto entregado: no se añadieron archivos ni dependencias de tests.
+Cuando una compra se completa correctamente:
 
-El ZIP excluye node_modules, dist y archivos temporales. Los documentos originales se conservan como referencia histórica y no describen necesariamente esta etapa.
+- Se genera una orden.
+- Se descuenta el stock correspondiente.
+- Se vacía el carrito.
+- Se almacena el identificador de la última orden creada.
+
+---
+
+## Checkout
+
+El Checkout funciona tanto para usuarios registrados como para invitados.
+
+### Usuario registrado
+
+Cuando existe una sesión activa se precargan:
+
+- Nombre.
+- RUN.
+- Correo.
+- Comuna.
+- Dirección.
+
+El cliente puede modificar estos datos exclusivamente para la compra que está realizando.
+
+Los cambios realizados durante el Checkout **no modifican los datos almacenados en su perfil**.
+
+La orden continúa asociada a la cuenta mediante el RUN del cliente y guarda también el RUN utilizado específicamente para la compra.
+
+### Invitado
+
+Cuando no existe sesión:
+
+- Los datos personales aparecen vacíos.
+- El usuario debe completar manualmente la información.
+- Puede realizar la compra sin crear una cuenta.
+- La compra genera una orden normalmente.
+- El stock se descuenta.
+- La orden no queda asociada al historial de otro cliente.
+
+---
+
+# Administración
+
+El sistema posee un panel administrativo con funcionalidades diferenciadas según el rol.
+
+## Administrador
+
+Tiene acceso a:
+
+- Dashboard.
+- Productos.
+- Crear productos.
+- Editar productos.
+- Eliminar productos.
+- Productos críticos.
+- Órdenes.
+- Detalle de órdenes.
+- Usuarios.
+- Crear usuarios.
+- Editar usuarios.
+- Categorías.
+- Reportes.
+- Perfil administrativo.
+
+## Vendedor
+
+Tiene acceso a:
+
+- Dashboard.
+- Productos.
+- Crear y editar productos.
+- Productos críticos.
+- Órdenes.
+- Detalle de órdenes.
+- Perfil.
+
+El Vendedor **no tiene acceso** a:
+
+- Usuarios.
+- Categorías.
+- Reportes.
+
+Las restricciones no son solamente visuales. Las rutas administrativas también controlan el acceso según el rol.
+
+## Cliente
+
+El Cliente utiliza exclusivamente la tienda pública.
+
+Si intenta acceder directamente al área administrativa, es redirigido a la tienda.
+
+---
+
+# Gestión de productos
+
+La administración de productos incluye operaciones de creación, lectura, edición y eliminación.
+
+Entre sus validaciones se encuentran:
+
+- Código obligatorio.
+- Código único.
+- Nombre obligatorio.
+- Precio obligatorio y no negativo.
+- Stock obligatorio.
+- Stock no negativo.
+- Stock solo con valores enteros.
+- Stock crítico opcional.
+- Categoría obligatoria.
+- Juego obligatorio.
+
+Un producto puede conservar su propio código al ser editado sin ser considerado un duplicado.
+
+---
+
+# Stock crítico
+
+La aplicación detecta productos críticos utilizando las siguientes reglas:
+
+- Si `stock = 0`, el producto siempre se considera crítico.
+- Si existe un stock crítico configurado, el producto se considera crítico cuando su stock actual es menor o igual al nivel configurado.
+- Si el stock crítico no fue configurado y el producto todavía posee stock, no se considera crítico.
+
+Ejemplos:
+
+```text
+stock 0 / crítico vacío → crítico
+stock 3 / crítico vacío → no crítico
+stock 3 / crítico 5 → crítico
+stock 10 / crítico 5 → no crítico
+```
+
+---
+
+# Usuarios y registro
+
+El registro público y la administración de usuarios incluyen validaciones para:
+
+- RUN obligatorio.
+- Validación real del dígito verificador del RUN chileno.
+- RUN no duplicado.
+- Correo no duplicado.
+- Campos obligatorios.
+- Región y comuna relacionadas.
+- Cambio de región reinicia la comuna seleccionada.
+
+Los dominios de correo permitidos son:
+
+```text
+@gmail.com
+@duoc.cl
+@profesor.duoc.cl
+```
+
+---
+
+# Órdenes
+
+Las compras generan órdenes almacenadas mediante `localStorage`.
+
+Las órdenes contienen información relacionada con:
+
+- Cliente o destinatario.
+- Correo.
+- Dirección.
+- Comuna.
+- Método de pago.
+- Fecha.
+- Productos.
+- Cantidades.
+- Total.
+- Estado.
+
+Las órdenes nuevas se crean actualmente con:
+
+```js
+status: 'Pendiente'
+```
+
+El sistema permite listar órdenes y consultar sus detalles.
+
+Actualmente **no se implementa modificación manual del estado de las órdenes**, ya que no forma parte de la funcionalidad confirmada para esta etapa.
+
+---
+
+# Seguridad de pedidos
+
+Un cliente solamente puede consultar las órdenes asociadas a su propia cuenta.
+
+Modificar manualmente el identificador de un pedido en la URL no permite visualizar una orden perteneciente a otro cliente.
+
+Las compras realizadas como invitado tampoco aparecen dentro del historial de pedidos de clientes registrados.
+
+---
+
+# Persistencia
+
+La aplicación utiliza `localStorage` para mantener información entre recargas del navegador.
+
+Entre las claves utilizadas se encuentran:
+
+```text
+productos
+usuarios
+categorias
+ordenes
+carrito
+sesion
+ultimaOrdenId
+```
+
+Se comprobó la persistencia de:
+
+- Sesión.
+- Carrito.
+- Productos y stock.
+- Órdenes.
+- Datos modificados del perfil.
+
+---
+
+# Usuarios de prueba
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Administrador | `admin@duoc.cl` | `Admin123` |
+| Vendedor | `vendedor@gmail.com` | `Vend1234` |
+| Cliente | `cliente@gmail.com` | `Clie123` |
+
+---
+
+# Pruebas unitarias
+
+La aplicación utiliza **Vitest** junto con **React Testing Library**.
+
+Los tests se encuentran en:
+
+```text
+src/test/
+```
+
+Actualmente existen:
+
+```text
+10 bloques describe
+20 casos test
+20 tests aprobados
+```
+
+Se prueban componentes y páginas mediante diferentes tipos de comprobaciones:
+
+- Renderizado.
+- Props.
+- Eventos.
+- Formularios.
+- Estado.
+- Comportamiento condicional.
+- Roles.
+- localStorage.
+- Stock.
+- Cálculos.
+- Inicio de sesión.
+- Mocks mediante `vi.fn()`.
+
+Entre los archivos probados se encuentran:
+
+```text
+AdminDashboard
+AdminHeader
+AdminNav
+CartItem
+CheckoutForm
+Contacto
+Footer
+Login
+ProductCard
+ProductosCriticos
+```
+
+Para ejecutar todos los tests una vez:
+
+```bash
+npm run test -- --run
+```
+
+Para ejecutarlos en modo observación:
+
+```bash
+npm run test
+```
+
+---
+
+# Cobertura de testing
+
+La cobertura se genera mediante:
+
+```text
+@vitest/coverage-v8
+```
+
+Para generar el informe:
+
+```bash
+npm run test:coverage
+```
+
+Resultado registrado en la revisión actual:
+
+| Métrica | Cobertura |
+|---|---:|
+| Statements | 88.78% |
+| Branches | 71.27% |
+| Functions | 89.28% |
+| Lines | 88.78% |
+
+Vitest genera además un informe HTML dentro de:
+
+```text
+coverage/index.html
+```
+
+La carpeta `coverage/` está excluida del repositorio mediante `.gitignore`, ya que puede volver a generarse ejecutando el comando de cobertura.
+
+---
+
+# Scripts disponibles
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+npm run test
+npm run test:coverage
+```
+
+---
+
+# Estado actual del proyecto
+
+La revisión funcional de la Fase 2 comprobó, entre otros puntos:
+
+- CRUD de productos.
+- CRUD de usuarios.
+- CRUD de categorías.
+- Registro.
+- Login.
+- Sesiones y roles.
+- Restricción de rutas.
+- Perfil y edición de perfil.
+- Carrito.
+- Control de stock.
+- Checkout registrado e invitado.
+- Creación de órdenes.
+- Descuento de stock.
+- Historial de pedidos.
+- Protección de pedidos ajenos.
+- Productos críticos.
+- Ofertas.
+- Dashboard.
+- Reportes.
+- Persistencia mediante `localStorage`.
+- Pruebas unitarias.
+- Informe de cobertura.
+
+---
+
+# Consideraciones de esta etapa
+
+Este proyecto corresponde actualmente a una implementación frontend académica.
+
+- No existe backend real en esta etapa.
+- La persistencia se simula mediante `localStorage`.
+- No existe una pasarela de pago real.
+- El resultado de compra se simula dentro del flujo frontend.
+- Las órdenes se crean inicialmente con estado `Pendiente`.
+- Los archivos HTML originales se conservan como referencia de etapas anteriores del desarrollo.
+
+---
+
+## Repositorio
+
+Proyecto PokeFoxx / TCG Market desarrollado para **Desarrollo Fullstack II — DSY1104**.
