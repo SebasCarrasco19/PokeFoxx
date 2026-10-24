@@ -146,22 +146,6 @@ function Header() {
 
 
           <NavLink
-            to="/categorias"
-            onClick={cerrarMenu}
-          >
-            Categorías
-          </NavLink>
-
-
-          <NavLink
-            to="/ofertas"
-            onClick={cerrarMenu}
-          >
-            Ofertas
-          </NavLink>
-
-
-          <NavLink
             to="/nosotros"
             onClick={cerrarMenu}
           >
