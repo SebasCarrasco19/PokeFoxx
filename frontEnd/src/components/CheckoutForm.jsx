@@ -1,7 +1,9 @@
 function CheckoutForm({
   datos,
   cambiarDato,
-  enviarCompra
+  enviarCompra,
+  simularPagoRechazado = false,
+  cambiarSimulacionPago = () => {}
 }) {
   return (
     <form
@@ -96,16 +98,69 @@ function CheckoutForm({
             <option value="">
               Selecciona una opción
             </option>
+
             <option value="Tarjeta de débito">
               Tarjeta de débito
             </option>
+
             <option value="Tarjeta de crédito">
               Tarjeta de crédito
             </option>
+
             <option value="Transferencia">
               Transferencia
             </option>
           </select>
+        </div>
+
+        <div className="form-group full">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 14px',
+              border: '1px solid #d8d4e8',
+              borderRadius: '10px',
+              background: '#faf9ff'
+            }}
+          >
+            <input
+              id="simularPagoRechazado"
+              type="checkbox"
+              checked={simularPagoRechazado}
+              onChange={cambiarSimulacionPago}
+              style={{
+                width: '18px',
+                height: '18px',
+                margin: 0,
+                flexShrink: 0
+              }}
+            />
+
+            <div>
+              <label
+                htmlFor="simularPagoRechazado"
+                style={{
+                  display: 'block',
+                  margin: 0,
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Simular pago rechazado
+              </label>
+
+              <small
+                style={{
+                  display: 'block',
+                  marginTop: '2px'
+                }}
+              >
+                Permite demostrar el flujo de error de pago.
+              </small>
+            </div>
+          </div>
         </div>
 
         <div className="form-group full">

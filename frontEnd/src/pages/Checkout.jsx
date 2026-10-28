@@ -63,6 +63,8 @@ function Checkout() {
   })
 
   const [mensaje, setMensaje] = useState('')
+  const [simularPagoRechazado, setSimularPagoRechazado] =
+    useState(false)
 
   function cambiarDato(event) {
     const { name, value } = event.target
@@ -72,6 +74,11 @@ function Checkout() {
       [name]: value
     })
 
+    setMensaje('')
+  }
+
+  function cambiarSimulacionPago(event) {
+    setSimularPagoRechazado(event.target.checked)
     setMensaje('')
   }
 
@@ -143,6 +150,11 @@ function Checkout() {
       return
     }
 
+    if (simularPagoRechazado) {
+      navigate('/pago-error')
+      return
+    }
+
     const productosActualizados = productos.map(producto => {
       const itemCarrito = carrito.find(
         item => item.id === producto.id
@@ -184,13 +196,8 @@ function Checkout() {
 
       customer: nombre,
       customerEmail: correo,
-
-      // Mantiene la orden asociada a la cuenta logueada
       customerRun: usuario?.run || null,
-
-      // RUN utilizado específicamente para esta compra
       recipientRun: runCompra,
-
       address: direccion,
       commune: comuna,
       paymentMethod: datos.metodoPago,
@@ -292,6 +299,8 @@ function Checkout() {
             datos={datos}
             cambiarDato={cambiarDato}
             enviarCompra={enviarCompra}
+            simularPagoRechazado={simularPagoRechazado}
+            cambiarSimulacionPago={cambiarSimulacionPago}
           />
 
           <div className="hero-actions">

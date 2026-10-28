@@ -267,5 +267,4 @@ export const ordenesIniciales = [
   },
 ]
 
-// Selección fija para mostrar la vista; no vigila cambios de inventario.
 export const productosCriticosEjemplo = [productosIniciales[8], productosIniciales[10]]
