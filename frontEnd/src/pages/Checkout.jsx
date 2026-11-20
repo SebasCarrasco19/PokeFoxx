@@ -1,11 +1,8 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import CheckoutForm from '../components/CheckoutForm'
-import {
-  productosIniciales,
-  ordenesIniciales,
-  usuariosIniciales
-} from '../data/adminData'
+import { registrarCompra } from '../services/ordenService'
 
 function validarRun(run) {
   const runLimpio = run.trim().toUpperCase()
@@ -22,7 +19,9 @@ function validarRun(run) {
 
   for (let i = cuerpo.length - 1; i >= 0; i--) {
     suma += Number(cuerpo[i]) * multiplicador
-    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1
+    multiplicador = multiplicador === 7
+      ? 2
+      : multiplicador + 1
   }
 
   const resultado = 11 - (suma % 11)
@@ -40,39 +39,34 @@ function validarRun(run) {
 function Checkout() {
   const navigate = useNavigate()
 
-  const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
-
-  const usuarios =
-    JSON.parse(localStorage.getItem('usuarios')) ||
-    usuariosIniciales
-
-  const usuario = sesion
-    ? usuarios.find(usuario => usuario.run === sesion.run)
-    : null
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion') || 'null'
+  )
 
   const [datos, setDatos] = useState({
-    nombre: usuario
-      ? `${usuario.firstName} ${usuario.lastName}`
+    nombre: sesion
+      ? `${sesion.firstName || ''} ${sesion.lastName || ''}`.trim()
       : '',
-    run: usuario?.run || '',
-    correo: usuario?.email || '',
-    direccion: usuario?.address || '',
-    comuna: usuario?.commune || '',
+    run: sesion?.run || '',
+    correo: sesion?.email || '',
+    direccion: sesion?.address || '',
+    comuna: sesion?.commune || '',
     metodoPago: ''
   })
 
   const [mensaje, setMensaje] = useState('')
+  const [cargando, setCargando] = useState(false)
+
   const [simularPagoRechazado, setSimularPagoRechazado] =
     useState(false)
 
   function cambiarDato(event) {
     const { name, value } = event.target
 
-    setDatos({
-      ...datos,
+    setDatos(anterior => ({
+      ...anterior,
       [name]: value
-    })
+    }))
 
     setMensaje('')
   }
@@ -82,27 +76,23 @@ function Checkout() {
     setMensaje('')
   }
 
-  function obtenerFechaActual() {
-    const fecha = new Date()
-    const año = fecha.getFullYear()
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0')
-    const dia = String(fecha.getDate()).padStart(2, '0')
-
-    return `${año}-${mes}-${dia}`
-  }
-
-  function enviarCompra(event) {
+  async function enviarCompra(event) {
     event.preventDefault()
     setMensaje('')
 
-    const carrito =
-      JSON.parse(localStorage.getItem('carrito')) || []
+    if (cargando) return
+
+    // Obtener el carrito de React
+    const carrito = JSON.parse(
+      localStorage.getItem('carrito') || '[]'
+    )
 
     if (carrito.length === 0) {
       setMensaje('Tu carrito está vacío.')
       return
     }
 
+    // Comprobar datos del formulario
     const nombre = datos.nombre.trim()
     const runCompra = datos.run.trim().toUpperCase()
     const correo = datos.correo.trim()
@@ -126,113 +116,57 @@ function Checkout() {
       return
     }
 
-    const productos =
-      JSON.parse(localStorage.getItem('productos')) ||
-      productosIniciales
+    // La compra requiere autenticación JWT
+    const token = localStorage.getItem('token')
 
-    const stockSuficiente = carrito.every(item => {
-      const producto = productos.find(
-        producto => producto.id === item.id
+    if (!sesion || !token) {
+      setMensaje(
+        'Debes iniciar sesión para realizar la compra.'
       )
-
-      const cantidad =
-        item.cantidad ?? item.quantity ?? 1
-
-      return (
-        producto &&
-        cantidad > 0 &&
-        producto.stock >= cantidad
-      )
-    })
-
-    if (!stockSuficiente) {
-      navigate('/pago-error')
       return
     }
 
+    // Mantener la simulación de pago del proyecto
     if (simularPagoRechazado) {
       navigate('/pago-error')
       return
     }
 
-    const productosActualizados = productos.map(producto => {
-      const itemCarrito = carrito.find(
-        item => item.id === producto.id
+    setCargando(true)
+
+    try {
+      // Enviar productos al backend
+      const orden = await registrarCompra(carrito)
+
+      if (!orden || !orden.id) {
+        throw new Error(
+          'No se recibió la confirmación de la compra.'
+        )
+      }
+
+      // Guardar solo la referencia para la pantalla final
+      localStorage.setItem(
+        'ultimaOrdenId',
+        String(orden.id)
       )
 
-      if (!itemCarrito) {
-        return producto
-      }
+      // Vaciar carrito únicamente después de guardar
+      localStorage.removeItem('carrito')
 
-      const cantidad =
-        itemCarrito.cantidad ??
-        itemCarrito.quantity ??
-        1
+      window.dispatchEvent(
+        new Event('carritoActualizado')
+      )
 
-      return {
-        ...producto,
-        stock: producto.stock - cantidad
-      }
-    })
+      navigate('/pago-correcto')
 
-    localStorage.setItem(
-      'productos',
-      JSON.stringify(productosActualizados)
-    )
-
-    const total = carrito.reduce((acumulador, item) => {
-      const cantidad =
-        item.cantidad ?? item.quantity ?? 1
-
-      return acumulador + Number(item.price) * cantidad
-    }, 0)
-
-    const ordenes =
-      JSON.parse(localStorage.getItem('ordenes')) ||
-      ordenesIniciales
-
-    const nuevaOrden = {
-      id: `ORD-${Date.now()}`,
-
-      customer: nombre,
-      customerEmail: correo,
-      customerRun: usuario?.run || null,
-      recipientRun: runCompra,
-      address: direccion,
-      commune: comuna,
-      paymentMethod: datos.metodoPago,
-      date: obtenerFechaActual(),
-      total,
-      status: 'Pendiente',
-
-      items: carrito.map(item => ({
-        productId: item.id,
-        name: item.name,
-        qty: item.cantidad ?? item.quantity ?? 1,
-        price: Number(item.price)
-      }))
+    } catch (error) {
+      setMensaje(
+        error.message ||
+        'No se pudo registrar la compra.'
+      )
+    } finally {
+      setCargando(false)
     }
-
-    localStorage.setItem(
-      'ordenes',
-      JSON.stringify([
-        ...ordenes,
-        nuevaOrden
-      ])
-    )
-
-    localStorage.setItem(
-      'ultimaOrdenId',
-      nuevaOrden.id
-    )
-
-    localStorage.removeItem('carrito')
-
-    window.dispatchEvent(
-      new Event('carritoActualizado')
-    )
-
-    navigate('/pago-correcto')
   }
 
   return (
@@ -247,7 +181,7 @@ function Checkout() {
           <h1>Finalizar compra</h1>
 
           <p>
-            {usuario
+            {sesion
               ? 'Revisa o modifica los datos de esta compra antes de continuar.'
               : 'Completa tus datos para continuar con el pedido.'}
           </p>
@@ -257,7 +191,7 @@ function Checkout() {
       <section className="section">
         <div className="container">
 
-          {!usuario && (
+          {!sesion && (
             <div
               className="content-card"
               style={{

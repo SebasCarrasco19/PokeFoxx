@@ -1,94 +1,123 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { usuariosIniciales } from '../data/adminData'
 
 function Login() {
 
   const navigate = useNavigate()
 
   const [mensaje, setMensaje] = useState('')
+  const [cargando, setCargando] = useState(false)
 
-
-  function manejarSubmit(event) {
+  async function manejarSubmit(event) {
 
     event.preventDefault()
 
     setMensaje('')
+    setCargando(true)
 
+    const formulario = new FormData(event.target)
 
-    const formulario =
-      new FormData(event.target)
+    const email = formulario.get('email').trim()
+    const password = formulario.get('password')
 
+    try {
 
-    const email =
-      formulario.get('email').trim()
-
-    const password =
-      formulario.get('password')
-
-
-    const usuarios =
-      JSON.parse(localStorage.getItem('usuarios')) ||
-      usuariosIniciales
-
-
-    const usuarioEncontrado =
-      usuarios.find(
-        usuario =>
-          usuario.email.toLowerCase() ===
-            email.toLowerCase() &&
-          usuario.password === password
+      // Enviar las credenciales al backend
+      const respuesta = await fetch(
+        'http://localhost:8080/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            password
+          })
+        }
       )
 
+      const datos = await respuesta.json()
 
-    if (!usuarioEncontrado) {
+      if (!respuesta.ok) {
+        throw new Error(
+          datos.error ||
+          'Correo o contraseña incorrectos.'
+        )
+      }
+
+      // Comprobar que recibimos el JWT
+      if (!datos.token) {
+        throw new Error(
+          'El servidor no entregó un token JWT.'
+        )
+      }
+
+      // Obtener los datos del usuario
+      const usuario = datos.usuario
+
+      if (!usuario || !usuario.role) {
+        throw new Error(
+          'El servidor no entregó los datos del usuario.'
+        )
+      }
+
+      // Adaptar los roles del backend al frontend
+      const roles = {
+        ROLE_ADMINISTRADOR: 'Administrador',
+        ROLE_VENDEDOR: 'Vendedor',
+        ROLE_CLIENTE: 'Cliente',
+        ADMINISTRADOR: 'Administrador',
+        VENDEDOR: 'Vendedor',
+        CLIENTE: 'Cliente'
+      }
+
+      const rol = roles[usuario.role]
+
+      if (!rol) {
+        throw new Error('Rol de usuario no reconocido.')
+      }
+
+      // Guardar la sesión
+      const sesion = {
+        run: usuario.run,
+        firstName: usuario.firstName,
+        lastName: usuario.lastName,
+        email: usuario.email,
+        role: rol
+      }
+
+      localStorage.setItem('token', datos.token)
+
+      localStorage.setItem(
+        'sesion',
+        JSON.stringify(sesion)
+      )
+
+      // Redirigir según el rol
+      if (
+        rol === 'Administrador' ||
+        rol === 'Vendedor'
+      ) {
+        navigate('/admin')
+      } else {
+        navigate('/perfil')
+      }
+
+    } catch (error) {
 
       setMensaje(
-        'Correo o contraseña incorrectos.'
+        error.message ||
+        'No fue posible iniciar sesión.'
       )
 
-      return
-    }
+    } finally {
 
+      setCargando(false)
 
-    const sesion = {
-
-      run:
-        usuarioEncontrado.run,
-
-      firstName:
-        usuarioEncontrado.firstName,
-
-      lastName:
-        usuarioEncontrado.lastName,
-
-      email:
-        usuarioEncontrado.email,
-
-      role:
-        usuarioEncontrado.role,
-    }
-
-
-    localStorage.setItem(
-      'sesion',
-      JSON.stringify(sesion)
-    )
-
-
-    if (
-      usuarioEncontrado.role === 'Administrador' ||
-      usuarioEncontrado.role === 'Vendedor'
-    ) {
-
-      navigate('/admin')
-
-    } else {
-
-      navigate('/perfil')
     }
   }
-
 
   return (
     <main>
@@ -104,16 +133,13 @@ function Login() {
               alt="PokeFoxx"
             />
 
-            <h1>
-              Iniciar sesión
-            </h1>
+            <h1>Iniciar sesión</h1>
 
             <p>
               Ingresa a tu cuenta de PokeFoxx.
             </p>
 
           </div>
-
 
           <form
             className="content-card form-card"
@@ -137,12 +163,9 @@ function Login() {
 
             </div>
 
-
             <div
               className="form-group"
-              style={{
-                marginTop: '18px'
-              }}
+              style={{ marginTop: '18px' }}
             >
 
               <label htmlFor="password">
@@ -153,41 +176,35 @@ function Login() {
                 id="password"
                 name="password"
                 type="password"
-                minLength="4"
-                maxLength="10"
                 required
               />
 
             </div>
 
-
             {mensaje && (
 
               <div
                 className="form-message error"
-                style={{
-                  marginTop: '18px'
-                }}
+                style={{ marginTop: '18px' }}
               >
-
                 ⚠️ {mensaje}
-
               </div>
 
             )}
 
-
             <button
               className="btn btn-primary"
               type="submit"
+              disabled={cargando}
               style={{
                 marginTop: '20px',
                 width: '100%'
               }}
             >
-              Iniciar sesión
+              {cargando
+                ? 'Iniciando sesión...'
+                : 'Iniciar sesión'}
             </button>
-
 
             <p
               style={{
@@ -196,13 +213,11 @@ function Login() {
                 marginBottom: 0
               }}
             >
-
               ¿No tienes una cuenta?{' '}
 
               <Link to="/registro">
                 Regístrate aquí
               </Link>
-
             </p>
 
           </form>

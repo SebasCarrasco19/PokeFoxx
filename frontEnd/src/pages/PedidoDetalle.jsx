@@ -1,228 +1,46 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ordenesIniciales } from '../data/adminData'
+import { obtenerOrden, formatoFecha, formatoPesos } from '../services/ordenService'
 
 export default function PedidoDetalle() {
-
   const { id } = useParams()
-
-
-  const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
-
-
-  if (!sesion) {
-
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    )
-  }
-
-
-  const ordenes =
-    JSON.parse(localStorage.getItem('ordenes')) ||
-    ordenesIniciales
-
-
-  const pedido = ordenes.find(orden => {
-
-    if (orden.id !== id) {
-      return false
-    }
-
-
-    if (orden.customerRun) {
-
-      return orden.customerRun === sesion.run
-    }
-
-
-    return (
-      orden.customerEmail?.toLowerCase() ===
-      sesion.email.toLowerCase()
-    )
-  })
-
-
-  if (!pedido) {
-
-    return (
-      <main className="container section">
-
-        <section className="content-card">
-
-          <h1>
-            Pedido no encontrado
-          </h1>
-
-          <p>
-            El pedido no existe o no pertenece a tu cuenta.
-          </p>
-
-          <Link
-            className="btn btn-secondary"
-            to="/perfil"
-          >
-            Volver a mi perfil
-          </Link>
-
-        </section>
-
-      </main>
-    )
-  }
-
-
-  return (
-    <main className="container section">
-
-      <section className="content-card">
-
-        <span className="eyebrow">
-          Mi pedido
-        </span>
-
-
-        <h1>
-          Pedido {pedido.id}
-        </h1>
-
-
-        <p>
-          <strong>
-            Fecha:
-          </strong>{' '}
-
-          {pedido.date}
-        </p>
-
-
-        <p>
-          <strong>
-            Estado:
-          </strong>{' '}
-
-          <span className="badge badge-warning">
-            {pedido.status}
-          </span>
-
-        </p>
-
-
-        {pedido.address && (
-
-          <p>
-            <strong>
-              Dirección:
-            </strong>{' '}
-
-            {pedido.address}
-          </p>
-
-        )}
-
-
-        {pedido.commune && (
-
-          <p>
-            <strong>
-              Comuna:
-            </strong>{' '}
-
-            {pedido.commune}
-          </p>
-
-        )}
-
-
-        {pedido.paymentMethod && (
-
-          <p>
-            <strong>
-              Método de pago:
-            </strong>{' '}
-
-            {pedido.paymentMethod}
-          </p>
-
-        )}
-
-
-        <hr />
-
-
-        <h2>
-          Productos
-        </h2>
-
-
-        {pedido.items.map((item, index) => (
-
-          <div
-            key={`${item.productId}-${index}`}
-            style={{
-              marginBottom: '16px',
-              paddingBottom: '16px',
-              borderBottom:
-                '1px solid var(--border)'
-            }}
-          >
-
-            <p>
-              <strong>
-                {item.name}
-              </strong>
-            </p>
-
-
-            <p>
-              Cantidad: {item.qty}
-            </p>
-
-
-            <p>
-              Precio unitario: $
-              {Number(
-                item.price
-              ).toLocaleString('es-CL')}
-            </p>
-
-
-            <p>
-              Subtotal: $
-              {Number(
-                item.price * item.qty
-              ).toLocaleString('es-CL')}
-            </p>
-
-          </div>
-
-        ))}
-
-
-        <p>
-
-          <strong>
-            Total: $
-            {Number(
-              pedido.total
-            ).toLocaleString('es-CL')}
-          </strong>
-
-        </p>
-
-
-        <Link
-          className="btn btn-secondary"
-          to="/perfil"
-        >
-          Volver a mi perfil
-        </Link>
-
-      </section>
-
-    </main>
-  )
+  const [pedido, setPedido] = useState(null)
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+  let sesion = null
+  try { sesion = JSON.parse(localStorage.getItem('sesion') || 'null') } catch { sesion = null }
+  const token = localStorage.getItem('token')
+
+  useEffect(() => {
+    if (!sesion || !token) return
+    let activo = true
+    obtenerOrden(id)
+      .then(datos => { if (activo) setPedido(datos) })
+      .catch(err => { if (activo) setError(err.message) })
+      .finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
+  }, [id])
+
+  if (!sesion || !token) return <Navigate to="/login" replace />
+  if (cargando) return <main className="container section"><p>Cargando pedido...</p></main>
+  if (error || !pedido) return <main className="container section"><section className="content-card">
+    <h1>Pedido no disponible</h1><p>{error || 'No se encontró el pedido.'}</p>
+    <Link className="btn btn-secondary" to="/perfil">Volver a mi perfil</Link>
+  </section></main>
+
+  return <main className="container section"><section className="content-card">
+    <span className="eyebrow">Mi pedido</span><h1>Pedido {pedido.id}</h1>
+    <p><strong>Fecha:</strong> {formatoFecha(pedido.fecha)}</p>
+    <p><strong>Estado:</strong> <span className="badge badge-warning">{pedido.estado}</span></p>
+    <hr/><h2>Productos</h2>
+    {(pedido.productos || []).map((item, index) => <div key={`${item.productoId}-${index}`}
+      style={{marginBottom:'16px',paddingBottom:'16px',borderBottom:'1px solid var(--border)'}}>
+      <p><strong>{item.nombre || `Producto #${item.productoId}`}</strong></p>
+      <p>Cantidad: {item.cantidad}</p>
+      <p>Precio unitario: {formatoPesos(item.precioUnitario)}</p>
+      <p>Subtotal: {formatoPesos(item.subtotal)}</p>
+    </div>)}
+    <p><strong>Total: {formatoPesos(pedido.total)}</strong></p>
+    <Link className="btn btn-secondary" to="/perfil">Volver a mi perfil</Link>
+  </section></main>
 }
