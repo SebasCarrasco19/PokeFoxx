@@ -1,48 +1,159 @@
+
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  productosIniciales,
-  usuariosIniciales,
-  ordenesIniciales
-} from '../../data/adminData'
+  listarOrdenes,
+  formatoPesos
+} from '../../services/ordenService'
+
+const API = 'http://localhost:8080/api/v1'
 
 export default function AdminReportes() {
 
-  const productos =
-    JSON.parse(localStorage.getItem('productos')) ||
-    productosIniciales
+  const [productos, setProductos] = useState([])
+  const [usuarios, setUsuarios] = useState([])
+  const [ordenes, setOrdenes] = useState([])
+  const [productosCriticos, setProductosCriticos] = useState([])
 
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
-  const usuarios =
-    JSON.parse(localStorage.getItem('usuarios')) ||
-    usuariosIniciales
+  useEffect(() => {
 
+    let activo = true
+    const controlador = new AbortController()
 
-  const ordenes =
-    JSON.parse(localStorage.getItem('ordenes')) ||
-    ordenesIniciales
+    async function cargarReportes() {
 
+      try {
 
-  const productosCriticos = productos.filter(
-    producto =>
-      producto.criticalStock !== null &&
-      producto.criticalStock !== '' &&
-      producto.stock <= producto.criticalStock
-  )
+        setCargando(true)
+        setError('')
 
+        const token = localStorage.getItem('token')
 
-  const totalVentas = ordenes.reduce(
+        if (!token) {
+          throw new Error(
+            'Debes iniciar sesión como Administrador.'
+          )
+        }
+
+        async function consultar(ruta) {
+
+          const respuesta = await fetch(
+            `${API}${ruta}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              },
+              signal: controlador.signal
+            }
+          )
+
+          if (!respuesta.ok) {
+
+            if (respuesta.status === 401) {
+              throw new Error(
+                'Tu sesión venció. Inicia sesión nuevamente.'
+              )
+            }
+
+            if (respuesta.status === 403) {
+              throw new Error(
+                'No tienes permiso para consultar estos reportes.'
+              )
+            }
+
+            throw new Error(
+              `Error al consultar ${ruta} (HTTP ${respuesta.status}).`
+            )
+          }
+
+          const datos = await respuesta.json()
+
+          if (!Array.isArray(datos)) {
+            throw new Error(
+              `El servidor devolvió datos incorrectos en ${ruta}.`
+            )
+          }
+
+          return datos
+        }
+
+        const [
+          productosObtenidos,
+          usuariosObtenidos,
+          ordenesObtenidas,
+          criticosObtenidos
+        ] = await Promise.all([
+          consultar('/productos'),
+          consultar('/usuarios'),
+          listarOrdenes(),
+          consultar('/productos/stock-critico')
+        ])
+
+        if (!Array.isArray(ordenesObtenidas)) {
+          throw new Error(
+            'El servidor devolvió un listado de órdenes incorrecto.'
+          )
+        }
+
+        if (activo) {
+
+          setProductos(productosObtenidos)
+          setUsuarios(usuariosObtenidos)
+          setOrdenes(ordenesObtenidas)
+          setProductosCriticos(criticosObtenidos)
+
+        }
+
+      } catch (error) {
+
+        if (
+          activo &&
+          error.name !== 'AbortError'
+        ) {
+          setError(
+            error.message ||
+            'No fue posible cargar los reportes.'
+          )
+        }
+
+      } finally {
+
+        if (activo) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarReportes()
+
+    return () => {
+      activo = false
+      controlador.abort()
+    }
+
+  }, [])
+
+  const totalOrdenes = ordenes.reduce(
     (total, orden) =>
-      total + Number(orden.total),
+      total + Number(orden.total ?? 0),
     0
   )
-
 
   const unidadesEnStock = productos.reduce(
     (total, producto) =>
-      total + Number(producto.stock),
+      total + Number(producto.stock ?? 0),
     0
   )
 
+  const ordenesPendientes = ordenes.filter(
+    orden =>
+      String(orden.estado ?? '').toUpperCase() ===
+      'PENDIENTE'
+  )
 
   return (
     <>
@@ -59,124 +170,152 @@ export default function AdminReportes() {
 
       </div>
 
+      {cargando && (
 
-      <div className="stat-grid">
+        <div className="content-card">
 
-        <article className="stat-card">
+          <p>
+            Cargando reportes...
+          </p>
 
-          <span>
-            Productos
-          </span>
+        </div>
 
-          <strong>
-            {productos.length}
-          </strong>
+      )}
 
-        </article>
+      {!cargando && error && (
 
+        <div className="form-message error">
 
-        <article className="stat-card">
+          ⚠️ {error}
 
-          <span>
-            Usuarios
-          </span>
+        </div>
 
-          <strong>
-            {usuarios.length}
-          </strong>
+      )}
 
-        </article>
+      {!cargando && !error && (
 
+        <>
 
-        <article className="stat-card">
+          <div className="stat-grid">
 
-          <span>
-            Órdenes
-          </span>
+            <article className="stat-card">
 
-          <strong>
-            {ordenes.length}
-          </strong>
+              <span>
+                Productos
+              </span>
 
-        </article>
+              <strong>
+                {productos.length}
+              </strong>
 
+            </article>
 
-        <article className="stat-card">
+            <article className="stat-card">
 
-          <span>
-            Ventas acumuladas
-          </span>
+              <span>
+                Usuarios
+              </span>
 
-          <strong>
-            ${totalVentas.toLocaleString('es-CL')}
-          </strong>
+              <strong>
+                {usuarios.length}
+              </strong>
 
-        </article>
+            </article>
 
-      </div>
+            <article className="stat-card">
 
+              <span>
+                Órdenes
+              </span>
 
-      <section className="content-card">
+              <strong>
+                {ordenes.length}
+              </strong>
 
-        <h2>
-          Inventario
-        </h2>
+            </article>
 
+            <article className="stat-card">
 
-        <p>
-          <strong>Unidades disponibles:</strong>{' '}
-          {unidadesEnStock}
-        </p>
+              <span>
+                Monto acumulado de órdenes
+              </span>
 
+              <strong>
+                {formatoPesos(totalOrdenes)}
+              </strong>
 
-        <p>
-          <strong>Productos con stock crítico:</strong>{' '}
-          {productosCriticos.length}
-        </p>
+            </article>
 
+          </div>
 
-        <Link
-          className="btn btn-secondary"
-          to="/admin/productos-criticos"
-        >
-          Ver productos críticos
-        </Link>
+          <section className="content-card">
 
-      </section>
+            <h2>
+              Inventario
+            </h2>
 
+            <p>
+              <strong>Unidades disponibles:</strong>{' '}
+              {unidadesEnStock}
+            </p>
 
-      <section
-        className="content-card"
-        style={{
-          marginTop: '20px'
-        }}
-      >
+            <p>
+              <strong>Productos con stock crítico:</strong>{' '}
+              {productosCriticos.length}
+            </p>
 
-        <h2>
-          Ventas
-        </h2>
+            <Link
+              className="btn btn-secondary"
+              to="/admin/productos-criticos"
+            >
+              Ver productos críticos
+            </Link>
 
+          </section>
 
-        <p>
-          <strong>Total de órdenes:</strong>{' '}
-          {ordenes.length}
-        </p>
+          <section
+            className="content-card"
+            style={{
+              marginTop: '20px'
+            }}
+          >
 
+            <h2>
+              Órdenes
+            </h2>
 
-        <p>
-          <strong>Total vendido:</strong>{' '}
-          ${totalVentas.toLocaleString('es-CL')}
-        </p>
+            <p>
+              <strong>Total de órdenes:</strong>{' '}
+              {ordenes.length}
+            </p>
 
+            <p>
+              <strong>Órdenes pendientes:</strong>{' '}
+              {ordenesPendientes.length}
+            </p>
 
-        <Link
-          className="btn btn-secondary"
-          to="/admin/ordenes"
-        >
-          Ver órdenes
-        </Link>
+            <p>
+              <strong>Monto acumulado de órdenes:</strong>{' '}
+              {formatoPesos(totalOrdenes)}
+            </p>
 
-      </section>
+            <p>
+              Los montos incluyen órdenes registradas
+              que todavía pueden estar pendientes de pago.
+            </p>
+
+            <Link
+              className="btn btn-secondary"
+              to="/admin/ordenes"
+            >
+              Ver órdenes
+            </Link>
+
+          </section>
+
+        </>
+
+      )}
 
     </>
   )

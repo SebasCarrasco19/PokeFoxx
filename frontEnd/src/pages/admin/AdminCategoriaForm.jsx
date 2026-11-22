@@ -1,49 +1,231 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import {
   Link,
   useNavigate,
   useParams
 } from 'react-router-dom'
 
-import {
-  categorias as categoriasIniciales,
-  productosIniciales
-} from '../../data/adminData'
-
 export default function AdminCategoriaForm() {
 
   const { id } = useParams()
   const navigate = useNavigate()
-
-  const [mensaje, setMensaje] = useState('')
-
-
-  const categorias =
-    JSON.parse(localStorage.getItem('categorias')) ||
-    categoriasIniciales
-
-
   const editando = Boolean(id)
 
+  const [nombre, setNombre] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [activo, setActivo] = useState(true)
 
-  const indice = editando
-    ? Number(id) - 1
-    : null
+  const [categorias, setCategorias] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState('')
+  const [noEncontrada, setNoEncontrada] = useState(false)
 
+  useEffect(() => {
 
-  const nombreActual = editando
-    ? categorias[indice]
-    : ''
+    const controlador = new AbortController()
 
+    async function cargarCategorias() {
 
-  if (
-    editando &&
-    (
-      !/^\d+$/.test(id) ||
-      indice < 0 ||
-      !nombreActual
+      try {
+
+        setCargando(true)
+        setMensaje('')
+        setNoEncontrada(false)
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/categorias',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible cargar las categorías.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor devolvió un formato incorrecto.'
+          )
+        }
+
+        if (controlador.signal.aborted) return
+
+        setCategorias(datos)
+
+        if (editando) {
+
+          const categoria = datos.find(
+            item => String(item.id) === String(id)
+          )
+
+          if (!categoria) {
+            setNoEncontrada(true)
+            return
+          }
+
+          setNombre(categoria.name ?? '')
+          setDescripcion(categoria.description ?? '')
+          setActivo(categoria.active ?? true)
+
+        } else {
+
+          setNombre('')
+          setDescripcion('')
+          setActivo(true)
+
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setMensaje(
+            error.message ||
+            'Ocurrió un error al cargar las categorías.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarCategorias()
+
+    return () => controlador.abort()
+
+  }, [id, editando])
+
+  async function guardarCategoria(event) {
+
+    event.preventDefault()
+
+    if (guardando) return
+
+    setMensaje('')
+
+    const nuevoNombre = nombre.trim()
+    const nuevaDescripcion = descripcion.trim()
+
+    if (!nuevoNombre) {
+      setMensaje(
+        'Debes ingresar un nombre para la categoría.'
+      )
+      return
+    }
+
+    const categoriaExiste = categorias.some(
+      categoria =>
+        categoria.name?.trim().toLowerCase() ===
+          nuevoNombre.toLowerCase() &&
+        String(categoria.id) !== String(id)
     )
-  ) {
+
+    if (categoriaExiste) {
+      setMensaje(
+        'Ya existe una categoría con ese nombre.'
+      )
+      return
+    }
+
+    setGuardando(true)
+
+    try {
+
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        throw new Error(
+          'Debes iniciar sesión como Administrador.'
+        )
+      }
+
+      const url = editando
+        ? `http://localhost:8080/api/v1/categorias/${id}`
+        : 'http://localhost:8080/api/v1/categorias'
+
+      const respuesta = await fetch(url, {
+        method: editando ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: nuevoNombre,
+          description: nuevaDescripcion,
+          active: activo
+        })
+      })
+
+      if (!respuesta.ok) {
+
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció. Inicia sesión nuevamente.'
+          )
+        }
+
+        if (respuesta.status === 403) {
+          throw new Error(
+            'No tienes permiso para modificar categorías.'
+          )
+        }
+
+        const contenido = await respuesta.text()
+
+        let datos = null
+
+        try {
+          datos = contenido
+            ? JSON.parse(contenido)
+            : null
+        } catch {
+          datos = null
+        }
+
+        throw new Error(
+          datos?.message ||
+          datos?.error ||
+          `No fue posible guardar la categoría (HTTP ${respuesta.status}).`
+        )
+      }
+
+      navigate('/admin/categorias')
+
+    } catch (error) {
+
+      setMensaje(
+        error.message ||
+        'Ocurrió un error al guardar la categoría.'
+      )
+
+    } finally {
+
+      setGuardando(false)
+
+    }
+  }
+
+  if (cargando) {
+
+    return (
+      <div className="content-card">
+        Cargando categoría...
+      </div>
+    )
+  }
+
+  if (noEncontrada) {
 
     return (
       <div className="content-card">
@@ -63,112 +245,6 @@ export default function AdminCategoriaForm() {
     )
   }
 
-
-  function guardarCategoria(event) {
-
-    event.preventDefault()
-
-    setMensaje('')
-
-
-    const formulario =
-      new FormData(event.target)
-
-
-    const nuevoNombre =
-      formulario.get('nombre').trim()
-
-
-    if (!nuevoNombre) {
-
-      setMensaje(
-        'Debes ingresar un nombre para la categoría.'
-      )
-
-      return
-    }
-
-
-    const categoriaExiste = categorias.some(
-      (categoria, i) =>
-        categoria.toLowerCase() ===
-          nuevoNombre.toLowerCase() &&
-        i !== indice
-    )
-
-
-    if (categoriaExiste) {
-
-      setMensaje(
-        'Ya existe una categoría con ese nombre.'
-      )
-
-      return
-    }
-
-
-    let categoriasActualizadas
-
-
-    if (editando) {
-
-      categoriasActualizadas =
-        categorias.map((categoria, i) => {
-
-          if (i === indice) {
-            return nuevoNombre
-          }
-
-          return categoria
-        })
-
-
-      const productos =
-        JSON.parse(localStorage.getItem('productos')) ||
-        productosIniciales
-
-
-      const productosActualizados =
-        productos.map(producto => {
-
-          if (
-            producto.category === nombreActual
-          ) {
-
-            return {
-              ...producto,
-              category: nuevoNombre
-            }
-          }
-
-          return producto
-        })
-
-
-      localStorage.setItem(
-        'productos',
-        JSON.stringify(productosActualizados)
-      )
-
-    } else {
-
-      categoriasActualizadas = [
-        ...categorias,
-        nuevoNombre
-      ]
-    }
-
-
-    localStorage.setItem(
-      'categorias',
-      JSON.stringify(categoriasActualizadas)
-    )
-
-
-    navigate('/admin/categorias')
-  }
-
-
   return (
     <>
 
@@ -182,15 +258,13 @@ export default function AdminCategoriaForm() {
 
         <p>
           {editando
-            ? 'Modifica el nombre de la categoría.'
+            ? 'Modifica la información de la categoría.'
             : 'Registra una nueva categoría para los productos.'}
         </p>
 
       </div>
 
-
       <form
-        key={id ?? 'nueva'}
         className="content-card admin-form"
         onSubmit={guardarCategoria}
       >
@@ -208,7 +282,6 @@ export default function AdminCategoriaForm() {
 
         )}
 
-
         <div className="form-group">
 
           <label htmlFor="nombreCategoria">
@@ -218,23 +291,69 @@ export default function AdminCategoriaForm() {
           <input
             id="nombreCategoria"
             name="nombre"
-            defaultValue={nombreActual}
-            maxLength="100"
+            value={nombre}
+            onChange={event =>
+              setNombre(event.target.value)
+            }
+            maxLength={100}
             required
           />
 
         </div>
 
+        <div className="form-group">
+
+          <label htmlFor="descripcionCategoria">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcionCategoria"
+            name="descripcion"
+            value={descripcion}
+            onChange={event =>
+              setDescripcion(event.target.value)
+            }
+            rows={3}
+          />
+
+        </div>
+
+        <div className="form-group">
+
+          <label htmlFor="activoCategoria">
+            Estado
+          </label>
+
+          <select
+            id="activoCategoria"
+            value={activo ? 'true' : 'false'}
+            onChange={event =>
+              setActivo(event.target.value === 'true')
+            }
+          >
+            <option value="true">
+              Activa
+            </option>
+
+            <option value="false">
+              Inactiva
+            </option>
+          </select>
+
+        </div>
 
         <div className="admin-button-row">
 
           <button
             className="btn btn-primary"
             type="submit"
+            disabled={guardando || Boolean(mensaje && categorias.length === 0)}
           >
-            Guardar categoría
+            {guardando
+              ? 'Guardando...'
+              : 'Guardar categoría'}
           </button>
-
 
           <Link
             className="btn btn-secondary"

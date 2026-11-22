@@ -1,3 +1,4 @@
+
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 
 import AdminLayout from './layouts/AdminLayout'
@@ -43,16 +44,40 @@ import Productos from './pages/Productos'
 import Registro from './pages/Registro'
 
 
+// Permitir el panel solo a Administrador y Vendedor
+function AccesoAdministracion() {
+
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion') || 'null'
+  )
+
+  const token = localStorage.getItem('token')
+
+  if (!sesion || !token) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (
+    sesion.role !== 'Administrador' &&
+    sesion.role !== 'Vendedor'
+  ) {
+    return <Navigate to="/" replace />
+  }
+
+  return <Outlet />
+}
+
+
+// Proteger las funciones exclusivas del Administrador
 function SoloAdministrador() {
 
-  const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
-
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion') || 'null'
+  )
 
   if (sesion?.role !== 'Administrador') {
     return <Navigate to="/admin" replace />
   }
-
 
   return <Outlet />
 }
@@ -170,116 +195,117 @@ function App() {
       </Route>
 
 
-      <Route
-        path="/admin"
-        element={<AdminLayout />}
-      >
+      {/* Rutas exclusivas de Administrador y Vendedor */}
+      <Route element={<AccesoAdministracion />}>
 
         <Route
-          index
-          element={<AdminDashboard />}
-        />
-
-
-        <Route
-          path="productos"
-          element={<AdminProductos />}
-        />
-
-        <Route
-          path="productos/nuevo"
-          element={<AdminProductoForm />}
-        />
-
-        <Route
-          path="productos/:id"
-          element={<AdminProductoDetalle />}
-        />
-
-        <Route
-          path="productos/:id/editar"
-          element={<AdminProductoForm />}
-        />
-
-        <Route
-          path="productos-criticos"
-          element={<ProductosCriticos />}
-        />
-
-
-        <Route
-          path="ordenes"
-          element={<AdminOrdenes />}
-        />
-
-        <Route
-          path="ordenes/:id"
-          element={<AdminOrdenDetalle />}
-        />
-
-
-        <Route
-          path="perfil"
-          element={<AdminPerfil />}
-        />
-
-
-        <Route element={<SoloAdministrador />}>
+          path="/admin"
+          element={<AdminLayout />}
+        >
 
           <Route
-            path="usuarios"
-            element={<AdminUsuarios />}
+            index
+            element={<AdminDashboard />}
           />
 
           <Route
-            path="usuarios/nuevo"
-            element={<AdminUsuarioForm />}
+            path="productos"
+            element={<AdminProductos />}
           />
 
           <Route
-            path="usuarios/:run"
-            element={<AdminUsuarioDetalle />}
+            path="productos/:id"
+            element={<AdminProductoDetalle />}
           />
 
           <Route
-            path="usuarios/:run/editar"
-            element={<AdminUsuarioForm />}
+            path="ordenes"
+            element={<AdminOrdenes />}
           />
 
           <Route
-            path="usuarios/:run/historial"
-            element={<AdminUsuarioHistorial />}
-          />
-
-
-          <Route
-            path="categorias"
-            element={<AdminCategorias />}
+            path="ordenes/:id"
+            element={<AdminOrdenDetalle />}
           />
 
           <Route
-            path="categorias/nueva"
-            element={<AdminCategoriaForm />}
-          />
-
-          <Route
-            path="categorias/:id/editar"
-            element={<AdminCategoriaForm />}
+            path="perfil"
+            element={<AdminPerfil />}
           />
 
 
+          {/* Funciones exclusivas del Administrador */}
+          <Route element={<SoloAdministrador />}>
+
+            <Route
+              path="productos/nuevo"
+              element={<AdminProductoForm />}
+            />
+
+            <Route
+              path="productos/:id/editar"
+              element={<AdminProductoForm />}
+            />
+
+            <Route
+              path="productos-criticos"
+              element={<ProductosCriticos />}
+            />
+
+            <Route
+              path="usuarios"
+              element={<AdminUsuarios />}
+            />
+
+            <Route
+              path="usuarios/nuevo"
+              element={<AdminUsuarioForm />}
+            />
+
+            <Route
+              path="usuarios/:run"
+              element={<AdminUsuarioDetalle />}
+            />
+
+            <Route
+              path="usuarios/:run/editar"
+              element={<AdminUsuarioForm />}
+            />
+
+            <Route
+              path="usuarios/:run/historial"
+              element={<AdminUsuarioHistorial />}
+            />
+
+            <Route
+              path="categorias"
+              element={<AdminCategorias />}
+            />
+
+            <Route
+              path="categorias/nueva"
+              element={<AdminCategoriaForm />}
+            />
+
+            <Route
+              path="categorias/:id/editar"
+              element={<AdminCategoriaForm />}
+            />
+
+            <Route
+              path="reportes"
+              element={<AdminReportes />}
+            />
+
+          </Route>
+
+
           <Route
-            path="reportes"
-            element={<AdminReportes />}
+            path="*"
+            element={<NoEncontrado />}
           />
 
         </Route>
-
-
-        <Route
-          path="*"
-          element={<NoEncontrado />}
-        />
 
       </Route>
 

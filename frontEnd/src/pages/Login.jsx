@@ -23,9 +23,9 @@ function Login() {
 
     try {
 
-      // Enviar las credenciales al backend
+      // Iniciar sesión en el backend
       const respuesta = await fetch(
-        'http://localhost:8080/api/auth/login',
+        'http://localhost:8080/api/v1/auth/login',
         {
           method: 'POST',
           headers: {
@@ -43,43 +43,56 @@ function Login() {
       if (!respuesta.ok) {
         throw new Error(
           datos.error ||
+          datos.message ||
           'Correo o contraseña incorrectos.'
         )
       }
 
-      // Comprobar que recibimos el JWT
       if (!datos.token) {
         throw new Error(
           'El servidor no entregó un token JWT.'
         )
       }
 
-      // Obtener los datos del usuario
-      const usuario = datos.usuario
+      // Obtener el usuario autenticado mediante JWT
+      const respuestaUsuario = await fetch(
+        'http://localhost:8080/api/v1/usuarios/me',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${datos.token}`
+          }
+        }
+      )
 
-      if (!usuario || !usuario.role) {
+      if (!respuestaUsuario.ok) {
         throw new Error(
-          'El servidor no entregó los datos del usuario.'
+          'No fue posible obtener los datos del usuario.'
         )
       }
 
+      const usuario = await respuestaUsuario.json()
+
       // Adaptar los roles del backend al frontend
       const roles = {
-        ROLE_ADMINISTRADOR: 'Administrador',
-        ROLE_VENDEDOR: 'Vendedor',
-        ROLE_CLIENTE: 'Cliente',
         ADMINISTRADOR: 'Administrador',
         VENDEDOR: 'Vendedor',
         CLIENTE: 'Cliente'
       }
 
-      const rol = roles[usuario.role]
+      const rolBackend = String(
+        usuario.role || usuario.rol || ''
+      )
+        .trim()
+        .replace(/^ROLE_/i, '')
+        .toUpperCase()
 
+      const rol = roles[rolBackend]
       if (!rol) {
         throw new Error('Rol de usuario no reconocido.')
       }
 
-      // Guardar la sesión
+      // Guardar los datos de la sesión
       const sesion = {
         run: usuario.run,
         firstName: usuario.firstName,
@@ -89,6 +102,15 @@ function Login() {
       }
 
       localStorage.setItem('token', datos.token)
+
+      if (datos.refreshToken) {
+        localStorage.setItem(
+          'refreshToken',
+          datos.refreshToken
+        )
+      } else {
+        localStorage.removeItem('refreshToken')
+      }
 
       localStorage.setItem(
         'sesion',

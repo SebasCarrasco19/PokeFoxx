@@ -1,33 +1,88 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import ProductCard from '../components/ProductCard'
-import { productosIniciales } from '../data/adminData'
 
 function Productos() {
 
-  const [productos] = useState(() => {
-
-    const productosGuardados = localStorage.getItem('productos')
-
-    if (productosGuardados) {
-      return JSON.parse(productosGuardados)
-    }
-
-    localStorage.setItem(
-      'productos',
-      JSON.stringify(productosIniciales)
-    )
-
-    return productosIniciales
-  })
+  const [productos, setProductos] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
   const [busqueda, setBusqueda] = useState('')
   const [juego, setJuego] = useState('')
   const [soloOfertas, setSoloOfertas] = useState(false)
 
+  useEffect(() => {
+
+    const controlador = new AbortController()
+
+    async function cargarProductos() {
+
+      try {
+
+        setCargando(true)
+        setError('')
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/productos',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible obtener los productos.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor entregó un formato de productos incorrecto.'
+          )
+        }
+
+        // Adaptar la categoría para ProductCard
+        const productosAdaptados = datos.map(producto => ({
+          ...producto,
+          category:
+            producto.categoria?.name ||
+            producto.category ||
+            'TCG'
+        }))
+
+        setProductos(productosAdaptados)
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setError(
+            error.message ||
+            'No fue posible cargar el catálogo.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarProductos()
+
+    return () => controlador.abort()
+
+  }, [])
+
   const productosFiltrados = productos.filter(producto => {
 
     const coincideBusqueda =
-      producto.name
+      (producto.name || '')
         .toLowerCase()
         .includes(busqueda.toLowerCase())
 
@@ -65,7 +120,6 @@ function Productos() {
 
       </section>
 
-
       <section className="section catalog-section">
 
         <div className="container">
@@ -89,7 +143,6 @@ function Productos() {
               />
 
             </div>
-
 
             <div className="form-group">
 
@@ -125,7 +178,6 @@ function Productos() {
 
             </div>
 
-
             <label className="offer-filter">
 
               <input
@@ -142,26 +194,48 @@ function Productos() {
 
           </div>
 
+          {cargando && (
+            <div className="catalog-results-row">
+              <p>Cargando productos...</p>
+            </div>
+          )}
 
-          <div className="catalog-results-row">
+          {error && (
+            <div className="form-message error">
+              ⚠️ {error}
+            </div>
+          )}
 
-            <p>
-              {productosFiltrados.length} producto(s) encontrado(s)
-            </p>
+          {!cargando && !error && (
+            <>
 
-          </div>
+              <div className="catalog-results-row">
 
+                <p>
+                  {productosFiltrados.length} producto(s) encontrado(s)
+                </p>
 
-          <div className="product-grid">
+              </div>
 
-            {productosFiltrados.map(producto => (
-              <ProductCard
-                key={producto.id}
-                producto={producto}
-              />
-            ))}
+              <div className="product-grid">
 
-          </div>
+                {productosFiltrados.map(producto => (
+                  <ProductCard
+                    key={producto.id}
+                    producto={producto}
+                  />
+                ))}
+
+              </div>
+
+              {productosFiltrados.length === 0 && (
+                <p>
+                  No se encontraron productos.
+                </p>
+              )}
+
+            </>
+          )}
 
         </div>
 

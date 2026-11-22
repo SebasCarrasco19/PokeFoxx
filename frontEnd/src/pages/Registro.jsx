@@ -1,6 +1,7 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { usuariosIniciales, regiones } from '../data/adminData'
+import { regiones } from '../data/adminData'
 
 function validarRun(run) {
   const runLimpio = run.trim().toUpperCase()
@@ -39,6 +40,7 @@ function Registro() {
   const [comunaSeleccionada, setComunaSeleccionada] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState('')
+  const [cargando, setCargando] = useState(false)
 
   const comunas =
     regiones.find(
@@ -50,21 +52,21 @@ function Registro() {
     setComunaSeleccionada('')
   }
 
-  function manejarSubmit(event) {
+  async function manejarSubmit(event) {
     event.preventDefault()
+
+    if (cargando) return
+
     setMensaje('')
+    setTipoMensaje('')
 
     const formulario = new FormData(event.target)
-
-    const usuarios =
-      JSON.parse(localStorage.getItem('usuarios')) ||
-      usuariosIniciales
 
     const run =
       formulario.get('run').trim().toUpperCase()
 
     const email =
-      formulario.get('email').trim()
+      formulario.get('email').trim().toLowerCase()
 
     if (!validarRun(run)) {
       setTipoMensaje('error')
@@ -83,29 +85,6 @@ function Registro() {
       return
     }
 
-    const runExiste = usuarios.some(
-      usuario =>
-        usuario.run.toUpperCase() === run
-    )
-
-    if (runExiste) {
-      setTipoMensaje('error')
-      setMensaje('Ya existe una cuenta con ese RUN.')
-      return
-    }
-
-    const correoExiste = usuarios.some(
-      usuario =>
-        usuario.email.toLowerCase() ===
-        email.toLowerCase()
-    )
-
-    if (correoExiste) {
-      setTipoMensaje('error')
-      setMensaje('Ya existe una cuenta con ese correo.')
-      return
-    }
-
     const nuevoUsuario = {
       run,
       firstName: formulario.get('firstName').trim(),
@@ -113,28 +92,53 @@ function Registro() {
       email,
       birthDate: formulario.get('birthDate'),
       password: formulario.get('password'),
-      role: 'Cliente',
       region: regionSeleccionada,
       commune: comunaSeleccionada,
       address: formulario.get('address').trim()
     }
 
-    localStorage.setItem(
-      'usuarios',
-      JSON.stringify([
-        ...usuarios,
-        nuevoUsuario
-      ])
-    )
+    setCargando(true)
 
-    setTipoMensaje('success')
-    setMensaje(
-      'Cuenta creada correctamente. Ahora puedes iniciar sesión.'
-    )
+    try {
+      const respuesta = await fetch(
+        'http://localhost:8080/api/v1/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(nuevoUsuario)
+        }
+      )
 
-    setTimeout(() => {
-      navigate('/login')
-    }, 1500)
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok) {
+        throw new Error(
+          datos.error ||
+          datos.message ||
+          'No fue posible crear la cuenta.'
+        )
+      }
+
+      setTipoMensaje('success')
+      setMensaje(
+        'Cuenta creada correctamente. Ahora puedes iniciar sesión.'
+      )
+
+      setTimeout(() => {
+        navigate('/login')
+      }, 1500)
+
+    } catch (error) {
+      setTipoMensaje('error')
+      setMensaje(
+        error.message ||
+        'No fue posible conectar con el servidor.'
+      )
+    } finally {
+      setCargando(false)
+    }
   }
 
   return (
@@ -341,8 +345,11 @@ function Registro() {
                 <button
                   className="btn btn-primary"
                   type="submit"
+                  disabled={cargando}
                 >
-                  Registrarse
+                  {cargando
+                    ? 'Registrando...'
+                    : 'Registrarse'}
                 </button>
               </div>
 

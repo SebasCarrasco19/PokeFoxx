@@ -1,78 +1,191 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { productosIniciales } from '../../data/adminData'
 
 function AdminProductos() {
 
-  const [productos, setProductos] = useState(() => {
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion') || 'null'
+  )
 
-    const productosGuardados =
-      localStorage.getItem('productos')
+  const esAdministrador =
+    sesion?.role === 'Administrador'
 
-    if (productosGuardados) {
-      return JSON.parse(productosGuardados)
+  const [productos, setProductos] = useState([])
+  const [productoAEliminar, setProductoAEliminar] = useState(null)
+  const [mensaje, setMensaje] = useState('')
+  const [tipoMensaje, setTipoMensaje] = useState('success')
+  const [cargando, setCargando] = useState(true)
+  const [eliminando, setEliminando] = useState(false)
+
+  useEffect(() => {
+
+    const controlador = new AbortController()
+
+    async function cargarProductos() {
+
+      try {
+
+        setCargando(true)
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/productos',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible obtener los productos.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor devolvió un formato incorrecto.'
+          )
+        }
+
+        if (!controlador.signal.aborted) {
+          setProductos(datos)
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setTipoMensaje('error')
+          setMensaje(
+            error.message ||
+            'No fue posible cargar los productos.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
     }
 
-    localStorage.setItem(
-      'productos',
-      JSON.stringify(productosIniciales)
-    )
+    cargarProductos()
 
-    return productosIniciales
-  })
+    return () => controlador.abort()
 
-
-  const [productoAEliminar, setProductoAEliminar] =
-    useState(null)
-
-  const [mensaje, setMensaje] =
-    useState('')
-
+  }, [])
 
   function solicitarEliminar(producto) {
+
+    if (!esAdministrador) return
 
     setMensaje('')
     setProductoAEliminar(producto)
   }
 
-
   function cancelarEliminar() {
+
+    if (eliminando) return
 
     setProductoAEliminar(null)
   }
 
+  async function confirmarEliminar() {
 
-  function confirmarEliminar() {
-
-    if (!productoAEliminar) {
+    if (!esAdministrador || !productoAEliminar || eliminando) {
       return
     }
 
+    setMensaje('')
+    setEliminando(true)
 
-    const productosActualizados =
-      productos.filter(
-        producto =>
-          producto.id !== productoAEliminar.id
+    try {
+
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        throw new Error(
+          'Debes iniciar sesión como Administrador.'
+        )
+      }
+
+      const respuesta = await fetch(
+        `http://localhost:8080/api/v1/productos/${productoAEliminar.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       )
 
+      if (!respuesta.ok) {
 
-    setProductos(productosActualizados)
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció. Inicia sesión nuevamente.'
+          )
+        }
 
+        if (respuesta.status === 403) {
+          throw new Error(
+            'No tienes permiso para eliminar productos.'
+          )
+        }
 
-    localStorage.setItem(
-      'productos',
-      JSON.stringify(productosActualizados)
-    )
+        if (respuesta.status === 409) {
+          throw new Error(
+            'No se puede eliminar este producto porque tiene órdenes asociadas.'
+          )
+        }
 
+        const contenido = await respuesta.text()
 
-    setMensaje(
-      `Producto "${productoAEliminar.name}" eliminado correctamente.`
-    )
+        let datos = null
 
+        try {
+          datos = contenido ? JSON.parse(contenido) : null
+        } catch {
+          datos = null
+        }
 
-    setProductoAEliminar(null)
+        throw new Error(
+          datos?.error ||
+          datos?.message ||
+          `No fue posible eliminar el producto (HTTP ${respuesta.status}).`
+        )
+      }
+
+      setProductos(actuales =>
+        actuales.filter(
+          producto => producto.id !== productoAEliminar.id
+        )
+      )
+
+      setTipoMensaje('success')
+      setMensaje(
+        `Producto "${productoAEliminar.name}" eliminado correctamente.`
+      )
+
+      setProductoAEliminar(null)
+
+    } catch (error) {
+
+      setTipoMensaje('error')
+      setMensaje(
+        error.message ||
+        'No fue posible eliminar el producto.'
+      )
+
+    } finally {
+
+      setEliminando(false)
+
+    }
   }
-
 
   return (
     <>
@@ -89,44 +202,47 @@ function AdminProductos() {
 
       </div>
 
-
       <div className="admin-toolbar">
 
         <span>
           {productos.length} producto(s) registrados.
         </span>
 
-        <Link
-          className="btn btn-primary"
-          to="/admin/productos/nuevo"
-        >
-          Nuevo producto
-        </Link>
+        {esAdministrador && (
+          <Link
+            className="btn btn-primary"
+            to="/admin/productos/nuevo"
+          >
+            Nuevo producto
+          </Link>
+        )}
 
       </div>
 
-
-      {mensaje && (
-
+      {cargando && (
         <div
-          className="form-message success"
-          style={{
-            marginBottom: '20px'
-          }}
+          className="content-card"
+          style={{ marginBottom: '20px' }}
         >
-          ✅ {mensaje}
+          Cargando productos...
         </div>
-
       )}
 
+      {mensaje && (
+        <div
+          className={`form-message ${tipoMensaje}`}
+          style={{ marginBottom: '20px' }}
+        >
+          {tipoMensaje === 'success' ? '✅' : '⚠️'}{' '}
+          {mensaje}
+        </div>
+      )}
 
-      {productoAEliminar && (
+      {esAdministrador && productoAEliminar && (
 
         <div
           className="content-card"
-          style={{
-            marginBottom: '20px'
-          }}
+          style={{ marginBottom: '20px' }}
         >
 
           <h3>
@@ -141,22 +257,24 @@ function AdminProductos() {
             ?
           </p>
 
-
           <div className="admin-button-row">
 
             <button
               className="btn btn-danger"
               type="button"
               onClick={confirmarEliminar}
+              disabled={eliminando}
             >
-              Sí, eliminar
+              {eliminando
+                ? 'Eliminando...'
+                : 'Sí, eliminar'}
             </button>
-
 
             <button
               className="btn btn-secondary"
               type="button"
               onClick={cancelarEliminar}
+              disabled={eliminando}
             >
               Cancelar
             </button>
@@ -167,86 +285,104 @@ function AdminProductos() {
 
       )}
 
+      {!cargando && (
 
-      <div className="table-wrap">
+        <div className="table-wrap">
 
-        <table>
+          <table>
 
-          <thead>
+            <thead>
 
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th>Acciones</th>
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            {productos.map(producto => (
-
-              <tr key={producto.id}>
-
-                <td>
-                  {producto.code}
-                </td>
-
-                <td>
-                  {producto.name}
-                </td>
-
-                <td>
-                  {producto.category}
-                </td>
-
-                <td>
-                  ${Number(producto.price).toLocaleString('es-CL')}
-                </td>
-
-                <td>
-                  {producto.stock}
-                </td>
-
-                <td>
-
-                  <div className="table-actions">
-
-                    <Link
-                      className="btn btn-secondary btn-sm"
-                      to={`/admin/productos/${producto.id}`}
-                    >
-                      Ver detalle
-                    </Link>
-
-
-                    <button
-                      className="btn btn-danger btn-sm"
-                      type="button"
-                      onClick={() =>
-                        solicitarEliminar(producto)
-                      }
-                    >
-                      Eliminar
-                    </button>
-
-                  </div>
-
-                </td>
-
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {productos.map(producto => {
 
-      </div>
+                const categoria =
+                  producto.categoria?.name ??
+                  producto.categoria?.nombre ??
+                  (typeof producto.categoria === 'string'
+                    ? producto.categoria
+                    : null) ??
+                  producto.category?.name ??
+                  producto.category ??
+                  'Sin categoría'
+
+                return (
+
+                  <tr key={producto.id}>
+
+                    <td>
+                      {producto.code}
+                    </td>
+
+                    <td>
+                      {producto.name}
+                    </td>
+
+                    <td>
+                      {categoria}
+                    </td>
+
+                    <td>
+                      ${Number(producto.price).toLocaleString('es-CL')}
+                    </td>
+
+                    <td>
+                      {producto.stock}
+                    </td>
+
+                    <td>
+
+                      <div className="table-actions">
+
+                        <Link
+                          className="btn btn-secondary btn-sm"
+                          to={`/admin/productos/${producto.id}`}
+                        >
+                          Ver detalle
+                        </Link>
+
+                        {esAdministrador && (
+
+                          <button
+                            className="btn btn-danger btn-sm"
+                            type="button"
+                            onClick={() =>
+                              solicitarEliminar(producto)
+                            }
+                          >
+                            Eliminar
+                          </button>
+
+                        )}
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                )
+              })}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
 
     </>
   )

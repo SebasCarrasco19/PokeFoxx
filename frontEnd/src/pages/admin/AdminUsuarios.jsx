@@ -1,47 +1,118 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { usuariosIniciales } from '../../data/adminData'
 
 function AdminUsuarios() {
 
-  const [usuarios, setUsuarios] = useState(() => {
-
-    const usuariosGuardados =
-      localStorage.getItem('usuarios')
-
-    if (usuariosGuardados) {
-      return JSON.parse(usuariosGuardados)
-    }
-
-    localStorage.setItem(
-      'usuarios',
-      JSON.stringify(usuariosIniciales)
-    )
-
-    return usuariosIniciales
-  })
-
-
+  const [usuarios, setUsuarios] = useState([])
   const [usuarioAEliminar, setUsuarioAEliminar] =
     useState(null)
 
-  const [mensaje, setMensaje] =
-    useState('')
+  const [mensaje, setMensaje] = useState('')
+  const [tipoMensaje, setTipoMensaje] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [eliminando, setEliminando] = useState(false)
 
-  const [tipoMensaje, setTipoMensaje] =
-    useState('')
+  const sesion = JSON.parse(
+    localStorage.getItem('sesion') || 'null'
+  )
 
+  useEffect(() => {
 
-  const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
+    const controlador = new AbortController()
 
+    async function cargarUsuarios() {
+
+      try {
+
+        setCargando(true)
+        setMensaje('')
+
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+          throw new Error(
+            'Debes iniciar sesión como Administrador.'
+          )
+        }
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/usuarios',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+
+          if (respuesta.status === 401) {
+            throw new Error(
+              'Tu sesión venció. Inicia sesión nuevamente.'
+            )
+          }
+
+          if (respuesta.status === 403) {
+            throw new Error(
+              'No tienes permiso para consultar usuarios.'
+            )
+          }
+
+          throw new Error(
+            `No fue posible obtener los usuarios (HTTP ${respuesta.status}).`
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor devolvió un formato incorrecto.'
+          )
+        }
+
+        if (!controlador.signal.aborted) {
+          setUsuarios(datos)
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+
+          setTipoMensaje('error')
+
+          setMensaje(
+            error.message ||
+            'No fue posible cargar los usuarios.'
+          )
+
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarUsuarios()
+
+    return () => controlador.abort()
+
+  }, [])
 
   function solicitarEliminar(usuario) {
 
     setMensaje('')
 
-
-    if (usuario.run === sesion?.run) {
+    if (
+      usuario.run === sesion?.run ||
+      usuario.email === sesion?.email
+    ) {
 
       setTipoMensaje('error')
 
@@ -52,50 +123,117 @@ function AdminUsuarios() {
       return
     }
 
-
     setUsuarioAEliminar(usuario)
   }
 
-
   function cancelarEliminar() {
+
+    if (eliminando) return
 
     setUsuarioAEliminar(null)
   }
 
+  async function confirmarEliminar() {
 
-  function confirmarEliminar() {
-
-    if (!usuarioAEliminar) {
+    if (!usuarioAEliminar || eliminando) {
       return
     }
 
+    setMensaje('')
+    setEliminando(true)
 
-    const usuariosActualizados =
-      usuarios.filter(
-        usuario =>
-          usuario.run !== usuarioAEliminar.run
+    try {
+
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        throw new Error(
+          'Debes iniciar sesión como Administrador.'
+        )
+      }
+
+      const respuesta = await fetch(
+        `http://localhost:8080/api/v1/usuarios/${usuarioAEliminar.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       )
 
+      if (!respuesta.ok) {
 
-    setUsuarios(usuariosActualizados)
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció. Inicia sesión nuevamente.'
+          )
+        }
 
+        if (respuesta.status === 403) {
+          throw new Error(
+            'No tienes permiso para eliminar usuarios.'
+          )
+        }
 
-    localStorage.setItem(
-      'usuarios',
-      JSON.stringify(usuariosActualizados)
-    )
+        const contenido = await respuesta.text()
 
+        let datos = null
 
-    setTipoMensaje('success')
+        try {
+          datos = contenido
+            ? JSON.parse(contenido)
+            : null
+        } catch {
+          datos = null
+        }
 
-    setMensaje(
-      `Usuario "${usuarioAEliminar.firstName} ${usuarioAEliminar.lastName}" eliminado correctamente.`
-    )
+        if (respuesta.status === 409) {
+          throw new Error(
+            datos?.error ||
+            'No se puede eliminar este usuario porque tiene datos asociados.'
+          )
+        }
 
+        throw new Error(
+          datos?.error ||
+          datos?.message ||
+          `No fue posible eliminar el usuario (HTTP ${respuesta.status}).`
+        )
+      }
 
-    setUsuarioAEliminar(null)
+      const usuarioEliminado = usuarioAEliminar
+
+      setUsuarios(actuales =>
+        actuales.filter(
+          usuario =>
+            usuario.id !== usuarioEliminado.id
+        )
+      )
+
+      setTipoMensaje('success')
+
+      setMensaje(
+        `Usuario "${usuarioEliminado.firstName} ${usuarioEliminado.lastName}" eliminado correctamente.`
+      )
+
+      setUsuarioAEliminar(null)
+
+    } catch (error) {
+
+      setTipoMensaje('error')
+
+      setMensaje(
+        error.message ||
+        'No fue posible eliminar el usuario.'
+      )
+
+    } finally {
+
+      setEliminando(false)
+
+    }
   }
-
 
   return (
     <>
@@ -112,11 +250,12 @@ function AdminUsuarios() {
 
       </div>
 
-
       <div className="admin-toolbar">
 
         <span>
-          {usuarios.length} usuario(s) registrado(s).
+          {cargando
+            ? 'Consultando usuarios...'
+            : `${usuarios.length} usuario(s) registrado(s).`}
         </span>
 
         <Link
@@ -128,14 +267,22 @@ function AdminUsuarios() {
 
       </div>
 
+      {cargando && (
+
+        <div
+          className="content-card"
+          style={{ marginBottom: '20px' }}
+        >
+          Cargando usuarios...
+        </div>
+
+      )}
 
       {mensaje && (
 
         <div
           className={`form-message ${tipoMensaje}`}
-          style={{
-            marginBottom: '20px'
-          }}
+          style={{ marginBottom: '20px' }}
         >
           {tipoMensaje === 'success' ? '✅' : '⚠️'}{' '}
           {mensaje}
@@ -143,14 +290,11 @@ function AdminUsuarios() {
 
       )}
 
-
       {usuarioAEliminar && (
 
         <div
           className="content-card"
-          style={{
-            marginBottom: '20px'
-          }}
+          style={{ marginBottom: '20px' }}
         >
 
           <h3>
@@ -171,22 +315,24 @@ function AdminUsuarios() {
             Correo: {usuarioAEliminar.email}
           </p>
 
-
           <div className="admin-button-row">
 
             <button
               className="btn btn-danger"
               type="button"
               onClick={confirmarEliminar}
+              disabled={eliminando}
             >
-              Sí, eliminar
+              {eliminando
+                ? 'Eliminando...'
+                : 'Sí, eliminar'}
             </button>
-
 
             <button
               className="btn btn-secondary"
               type="button"
               onClick={cancelarEliminar}
+              disabled={eliminando}
             >
               Cancelar
             </button>
@@ -197,91 +343,104 @@ function AdminUsuarios() {
 
       )}
 
+      {!cargando && (
 
-      <div className="table-wrap">
+        <div className="table-wrap">
 
-        <table>
+          <table>
 
-          <thead>
+            <thead>
 
-            <tr>
-              <th>RUN</th>
-              <th>Nombre</th>
-              <th>Correo</th>
-              <th>Perfil</th>
-              <th>Ubicación</th>
-              <th>Acciones</th>
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            {usuarios.map(usuario => (
-
-              <tr key={usuario.run}>
-
-                <td>
-                  {usuario.run}
-                </td>
-
-                <td>
-                  {usuario.firstName}{' '}
-                  {usuario.lastName}
-                </td>
-
-                <td>
-                  {usuario.email}
-                </td>
-
-                <td>
-
-                  <span className="role-chip">
-                    {usuario.role}
-                  </span>
-
-                </td>
-
-                <td>
-                  {usuario.region} / {usuario.commune}
-                </td>
-
-                <td>
-
-                  <div className="table-actions">
-
-                    <Link
-                      className="btn btn-secondary btn-sm"
-                      to={`/admin/usuarios/${usuario.run}`}
-                    >
-                      Ver detalle
-                    </Link>
-
-
-                    <button
-                      className="btn btn-danger btn-sm"
-                      type="button"
-                      onClick={() =>
-                        solicitarEliminar(usuario)
-                      }
-                    >
-                      Eliminar
-                    </button>
-
-                  </div>
-
-                </td>
-
+              <tr>
+                <th>RUN</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Perfil</th>
+                <th>Ubicación</th>
+                <th>Acciones</th>
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {usuarios.map(usuario => (
 
-      </div>
+                <tr key={usuario.id}>
+
+                  <td>
+                    {usuario.run}
+                  </td>
+
+                  <td>
+                    {usuario.firstName}{' '}
+                    {usuario.lastName}
+                  </td>
+
+                  <td>
+                    {usuario.email}
+                  </td>
+
+                  <td>
+
+                    <span className="role-chip">
+                      {usuario.role}
+                    </span>
+
+                  </td>
+
+                  <td>
+                    {usuario.region || 'Sin región'}
+                    {' / '}
+                    {usuario.commune || 'Sin comuna'}
+                  </td>
+
+                  <td>
+
+                    <div className="table-actions">
+
+                      <Link
+                        className="btn btn-secondary btn-sm"
+                        to={`/admin/usuarios/${usuario.run}`}
+                      >
+                        Ver detalle
+                      </Link>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        type="button"
+                        onClick={() =>
+                          solicitarEliminar(usuario)
+                        }
+                      >
+                        Eliminar
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+              {usuarios.length === 0 && !mensaje && (
+
+                <tr>
+                  <td colSpan="6">
+                    No hay usuarios registrados.
+                  </td>
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
 
     </>
   )

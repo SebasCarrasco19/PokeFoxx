@@ -1,109 +1,192 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  categorias as categoriasIniciales,
-  productosIniciales
-} from '../../data/adminData'
 
 export default function AdminCategorias() {
 
-  const [categorias, setCategorias] = useState(() => {
-
-    const categoriasGuardadas =
-      localStorage.getItem('categorias')
-
-    if (categoriasGuardadas) {
-      return JSON.parse(categoriasGuardadas)
-    }
-
-    localStorage.setItem(
-      'categorias',
-      JSON.stringify(categoriasIniciales)
-    )
-
-    return categoriasIniciales
-  })
-
-
+  const [categorias, setCategorias] = useState([])
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState('')
   const [categoriaAEliminar, setCategoriaAEliminar] = useState(null)
+  const [cargando, setCargando] = useState(true)
+  const [eliminando, setEliminando] = useState(false)
 
+  useEffect(() => {
 
-  function solicitarEliminar(indice) {
+    const controlador = new AbortController()
+
+    async function cargarCategorias() {
+
+      try {
+
+        setCargando(true)
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/categorias',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible obtener las categorías.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor devolvió un formato incorrecto.'
+          )
+        }
+
+        if (!controlador.signal.aborted) {
+          setCategorias(datos)
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+
+          setTipoMensaje('error')
+
+          setMensaje(
+            error.message ||
+            'No fue posible cargar las categorías.'
+          )
+
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarCategorias()
+
+    return () => controlador.abort()
+
+  }, [])
+
+  function solicitarEliminar(categoria) {
 
     setMensaje('')
+    setCategoriaAEliminar(categoria)
+  }
 
-    const categoria = categorias[indice]
+  function cancelarEliminar() {
 
-    const productos =
-      JSON.parse(localStorage.getItem('productos')) ||
-      productosIniciales
+    if (eliminando) return
 
+    setCategoriaAEliminar(null)
+  }
 
-    const categoriaEnUso = productos.some(
-      producto => producto.category === categoria
-    )
+  async function confirmarEliminar() {
 
+    if (!categoriaAEliminar || eliminando) {
+      return
+    }
 
-    if (categoriaEnUso) {
+    setMensaje('')
+    setEliminando(true)
+
+    try {
+
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        throw new Error(
+          'Debes iniciar sesión como Administrador.'
+        )
+      }
+
+      const respuesta = await fetch(
+        `http://localhost:8080/api/v1/categorias/${categoriaAEliminar.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      if (!respuesta.ok) {
+
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció. Inicia sesión nuevamente.'
+          )
+        }
+
+        if (respuesta.status === 403) {
+          throw new Error(
+            'No tienes permiso para eliminar categorías.'
+          )
+        }
+
+        if (respuesta.status === 409) {
+          throw new Error(
+            'No puedes eliminar esta categoría porque tiene productos asociados.'
+          )
+        }
+
+        const contenido = await respuesta.text()
+
+        let datos = null
+
+        try {
+          datos = contenido
+            ? JSON.parse(contenido)
+            : null
+        } catch {
+          datos = null
+        }
+
+        throw new Error(
+          datos?.message ||
+          datos?.error ||
+          `No fue posible eliminar la categoría (HTTP ${respuesta.status}).`
+        )
+      }
+
+      const nombreEliminado = categoriaAEliminar.name
+
+      setCategorias(actuales =>
+        actuales.filter(
+          categoria =>
+            categoria.id !== categoriaAEliminar.id
+        )
+      )
+
+      setTipoMensaje('success')
+
+      setMensaje(
+        `Categoría "${nombreEliminado}" eliminada correctamente.`
+      )
+
+      setCategoriaAEliminar(null)
+
+    } catch (error) {
 
       setTipoMensaje('error')
 
       setMensaje(
-        'No puedes eliminar esta categoría porque tiene productos asociados.'
+        error.message ||
+        'No fue posible eliminar la categoría.'
       )
 
-      return
+    } finally {
+
+      setEliminando(false)
+
     }
-
-
-    setCategoriaAEliminar({
-      indice,
-      nombre: categoria
-    })
   }
-
-
-  function confirmarEliminar() {
-
-    if (!categoriaAEliminar) {
-      return
-    }
-
-
-    const categoriasActualizadas =
-      categorias.filter(
-        (nombre, i) =>
-          i !== categoriaAEliminar.indice
-      )
-
-
-    setCategorias(categoriasActualizadas)
-
-
-    localStorage.setItem(
-      'categorias',
-      JSON.stringify(categoriasActualizadas)
-    )
-
-
-    setTipoMensaje('success')
-
-    setMensaje(
-      `Categoría "${categoriaAEliminar.nombre}" eliminada correctamente.`
-    )
-
-
-    setCategoriaAEliminar(null)
-  }
-
-
-  function cancelarEliminar() {
-
-    setCategoriaAEliminar(null)
-  }
-
 
   return (
     <>
@@ -120,7 +203,6 @@ export default function AdminCategorias() {
 
       </div>
 
-
       <div className="admin-toolbar">
 
         <span>
@@ -136,14 +218,22 @@ export default function AdminCategorias() {
 
       </div>
 
+      {cargando && (
+
+        <div
+          className="content-card"
+          style={{ marginBottom: '20px' }}
+        >
+          Cargando categorías...
+        </div>
+
+      )}
 
       {mensaje && (
 
         <div
           className={`form-message ${tipoMensaje}`}
-          style={{
-            marginBottom: '20px'
-          }}
+          style={{ marginBottom: '20px' }}
         >
           {tipoMensaje === 'success' ? '✅' : '⚠️'}{' '}
           {mensaje}
@@ -151,14 +241,11 @@ export default function AdminCategorias() {
 
       )}
 
-
       {categoriaAEliminar && (
 
         <div
           className="content-card"
-          style={{
-            marginBottom: '20px'
-          }}
+          style={{ marginBottom: '20px' }}
         >
 
           <h3>
@@ -168,11 +255,10 @@ export default function AdminCategorias() {
           <p>
             ¿Seguro que quieres eliminar{' '}
             <strong>
-              {categoriaAEliminar.nombre}
+              {categoriaAEliminar.name}
             </strong>
             ?
           </p>
-
 
           <div className="admin-button-row">
 
@@ -180,15 +266,18 @@ export default function AdminCategorias() {
               className="btn btn-danger"
               type="button"
               onClick={confirmarEliminar}
+              disabled={eliminando}
             >
-              Sí, eliminar
+              {eliminando
+                ? 'Eliminando...'
+                : 'Sí, eliminar'}
             </button>
-
 
             <button
               className="btn btn-secondary"
               type="button"
               onClick={cancelarEliminar}
+              disabled={eliminando}
             >
               Cancelar
             </button>
@@ -199,66 +288,79 @@ export default function AdminCategorias() {
 
       )}
 
+      {!cargando && (
 
-      <div className="table-wrap">
+        <div className="table-wrap">
 
-        <table>
+          <table>
 
-          <thead>
+            <thead>
 
-            <tr>
-              <th>Nombre</th>
-              <th>Acciones</th>
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            {categorias.map((nombre, i) => (
-
-              <tr key={nombre}>
-
-                <td>
-                  {nombre}
-                </td>
-
-                <td>
-
-                  <div className="table-actions">
-
-                    <Link
-                      className="btn btn-secondary btn-sm"
-                      to={`/admin/categorias/${i + 1}/editar`}
-                    >
-                      Editar
-                    </Link>
-
-
-                    <button
-                      className="btn btn-danger btn-sm"
-                      type="button"
-                      onClick={() =>
-                        solicitarEliminar(i)
-                      }
-                    >
-                      Eliminar
-                    </button>
-
-                  </div>
-
-                </td>
-
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {categorias.map(categoria => (
 
-      </div>
+                <tr key={categoria.id}>
+
+                  <td>
+                    {categoria.name}
+                  </td>
+
+                  <td>
+                    {categoria.description || 'Sin descripción'}
+                  </td>
+
+                  <td>
+                    {categoria.active === false
+                      ? 'Inactiva'
+                      : 'Activa'}
+                  </td>
+
+                  <td>
+
+                    <div className="table-actions">
+
+                      <Link
+                        className="btn btn-secondary btn-sm"
+                        to={`/admin/categorias/${categoria.id}/editar`}
+                      >
+                        Editar
+                      </Link>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        type="button"
+                        onClick={() =>
+                          solicitarEliminar(categoria)
+                        }
+                      >
+                        Eliminar
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
 
     </>
   )

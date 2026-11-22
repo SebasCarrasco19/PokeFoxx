@@ -1,4 +1,16 @@
+
 function CriticalProduct({ producto }) {
+
+  const categoria =
+    producto.categoria?.name ??
+    producto.categoria?.nombre ??
+    (typeof producto.categoria === 'string'
+      ? producto.categoria
+      : null) ??
+    producto.category?.name ??
+    producto.category ??
+    'Sin categoría'
+
   return (
     <article className="content-card">
 
@@ -11,7 +23,7 @@ function CriticalProduct({ producto }) {
       </h3>
 
       <p>
-        <strong>Categoría:</strong> {producto.category}
+        <strong>Categoría:</strong> {categoria}
       </p>
 
       <p>

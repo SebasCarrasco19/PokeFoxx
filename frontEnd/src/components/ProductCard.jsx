@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -5,7 +6,6 @@ function ProductCard({ producto }) {
 
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState('ok')
-
 
   const nombre =
     producto.nombre ?? producto.name
@@ -16,9 +16,18 @@ function ProductCard({ producto }) {
   const precioOriginal =
     producto.precioOriginal ?? producto.originalPrice
 
+  // Mostrar el nombre de la categoría y no el objeto completo
   const categoria =
-    producto.categoria ??
-    producto.category ??
+    producto.categoria?.name ??
+    producto.categoria?.nombre ??
+    (typeof producto.categoria === 'string'
+      ? producto.categoria
+      : null) ??
+    producto.category?.name ??
+    producto.category?.nombre ??
+    (typeof producto.category === 'string'
+      ? producto.category
+      : null) ??
     'TCG'
 
   const juego =
@@ -35,7 +44,6 @@ function ProductCard({ producto }) {
     producto.imagen ??
     producto.image
 
-
   function mostrarMensaje(tipo, texto) {
 
     setTipoMensaje(tipo)
@@ -45,7 +53,6 @@ function ProductCard({ producto }) {
       setMensaje('')
     }, 2000)
   }
-
 
   function agregarAlCarrito() {
 
@@ -59,15 +66,12 @@ function ProductCard({ producto }) {
       return
     }
 
-
     const carrito =
       JSON.parse(localStorage.getItem('carrito')) || []
-
 
     const productoExistente = carrito.find(
       item => item.id === producto.id
     )
-
 
     if (productoExistente) {
 
@@ -75,7 +79,6 @@ function ProductCard({ producto }) {
         productoExistente.quantity ??
         productoExistente.cantidad ??
         1
-
 
       if (cantidadActual >= producto.stock) {
 
@@ -86,7 +89,6 @@ function ProductCard({ producto }) {
 
         return
       }
-
 
       productoExistente.quantity =
         cantidadActual + 1
@@ -103,24 +105,20 @@ function ProductCard({ producto }) {
       })
     }
 
-
     localStorage.setItem(
       'carrito',
       JSON.stringify(carrito)
     )
 
-
     window.dispatchEvent(
       new Event('carritoActualizado')
     )
-
 
     mostrarMensaje(
       'ok',
       'Producto añadido al carrito.'
     )
   }
-
 
   return (
     <article className="product-card">
@@ -132,25 +130,19 @@ function ProductCard({ producto }) {
       >
 
         {oferta && (
-
           <span className="offer-badge">
             Oferta
           </span>
-
         )}
 
-
         {imagen && (
-
           <img
             src={imagen}
             alt={nombre}
           />
-
         )}
 
       </Link>
-
 
       <div className="product-card-body">
 
@@ -166,29 +158,22 @@ function ProductCard({ producto }) {
 
         </div>
 
-
         <h3>
-
           <Link to={`/producto/${producto.id}`}>
             {nombre}
           </Link>
-
         </h3>
-
 
         <div className="product-price-row">
 
           {oferta && precioOriginal && (
-
             <span className="product-price-old">
               $
               {Number(
                 precioOriginal
               ).toLocaleString('es-CL')}
             </span>
-
           )}
-
 
           <span className="product-price">
             $
@@ -198,7 +183,6 @@ function ProductCard({ producto }) {
           </span>
 
         </div>
-
 
         <button
           className="btn btn-primary"
@@ -211,18 +195,13 @@ function ProductCard({ producto }) {
             : 'Añadir al carrito'}
         </button>
 
-
         {mensaje && (
-
-          <p
-            className={`product-message ${tipoMensaje}`}
-          >
+          <p className={`product-message ${tipoMensaje}`}>
             {tipoMensaje === 'ok'
               ? '✅'
               : '⚠️'}{' '}
             {mensaje}
           </p>
-
         )}
 
       </div>

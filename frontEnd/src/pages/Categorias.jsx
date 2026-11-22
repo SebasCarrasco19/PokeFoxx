@@ -1,31 +1,95 @@
+
+import { useEffect, useState } from 'react'
 import CategoryCard from '../components/CategoryCard'
-import { categorias as categoriasIniciales } from '../data/adminData'
 
 function Categorias() {
 
-  const categoriasGuardadas =
-    JSON.parse(localStorage.getItem('categorias')) ||
-    categoriasIniciales
+  const [categorias, setCategorias] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
+  useEffect(() => {
 
-  const categorias = categoriasGuardadas.map(
-    (nombre, index) => {
+    const controlador = new AbortController()
 
-      const slug = nombre
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '-')
+    async function cargarCategorias() {
 
-      return {
-        id: index + 1,
-        nombre: nombre,
-        slug: slug,
-        descripcion: `Explora los productos disponibles en ${nombre}.`
+      try {
+
+        setCargando(true)
+        setError('')
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/categorias',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible obtener las categorías.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor devolvió un formato incorrecto.'
+          )
+        }
+
+        // Adaptar las categorías para CategoryCard
+        const categoriasAdaptadas = datos
+          .filter(categoria => categoria.active !== false)
+          .map(categoria => {
+
+            const nombre = categoria.name
+
+            const slug = nombre
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/\s+/g, '-')
+
+            return {
+              id: categoria.id,
+              nombre,
+              slug,
+              descripcion:
+                categoria.description ||
+                `Explora los productos disponibles en ${nombre}.`
+            }
+          })
+
+        if (!controlador.signal.aborted) {
+          setCategorias(categoriasAdaptadas)
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setError(
+            error.message ||
+            'No fue posible cargar las categorías.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
       }
     }
-  )
 
+    cargarCategorias()
+
+    return () => controlador.abort()
+
+  }, [])
 
   return (
     <main>
@@ -50,23 +114,56 @@ function Categorias() {
 
       </section>
 
-
       <section className="section">
 
         <div className="container">
 
-          <div className="two-col">
+          {cargando && (
+            <div className="content-card empty-state">
+              <h2>Cargando categorías...</h2>
+            </div>
+          )}
 
-            {categorias.map(categoria => (
+          {error && (
+            <div className="form-message error">
+              ⚠️ {error}
+            </div>
+          )}
 
-              <CategoryCard
-                key={categoria.id}
-                categoria={categoria}
-              />
+          {!cargando && !error && (
 
-            ))}
+            categorias.length > 0 ? (
 
-          </div>
+              <div className="two-col">
+
+                {categorias.map(categoria => (
+
+                  <CategoryCard
+                    key={categoria.id}
+                    categoria={categoria}
+                  />
+
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="content-card empty-state">
+
+                <h2>
+                  No hay categorías disponibles
+                </h2>
+
+                <p>
+                  Todavía no hay categorías activas en la tienda.
+                </p>
+
+              </div>
+
+            )
+
+          )}
 
         </div>
 

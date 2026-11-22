@@ -1,23 +1,176 @@
+
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  usuariosIniciales,
-  ordenesIniciales
-} from '../../data/adminData'
+  listarOrdenes,
+  formatoFecha,
+  formatoPesos
+} from '../../services/ordenService'
 
 export default function AdminUsuarioHistorial() {
 
   const { run } = useParams()
 
+  const [usuario, setUsuario] = useState(null)
+  const [historial, setHistorial] = useState([])
 
-  const usuarios =
-    JSON.parse(localStorage.getItem('usuarios')) ||
-    usuariosIniciales
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
+  useEffect(() => {
 
-  const usuario = usuarios.find(
-    item => item.run === run
-  )
+    let activo = true
 
+    async function cargarHistorial() {
+
+      try {
+
+        setCargando(true)
+        setError('')
+        setUsuario(null)
+        setHistorial([])
+
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+          throw new Error(
+            'Debes iniciar sesión como Administrador.'
+          )
+        }
+
+        const respuestaUsuarios = await fetch(
+          'http://localhost:8080/api/v1/usuarios',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        if (!respuestaUsuarios.ok) {
+
+          if (respuestaUsuarios.status === 401) {
+            throw new Error(
+              'Tu sesión venció. Inicia sesión nuevamente.'
+            )
+          }
+
+          if (respuestaUsuarios.status === 403) {
+            throw new Error(
+              'No tienes permiso para consultar usuarios.'
+            )
+          }
+
+          throw new Error(
+            'No fue posible obtener los usuarios.'
+          )
+        }
+
+        const usuarios = await respuestaUsuarios.json()
+
+        if (!Array.isArray(usuarios)) {
+          throw new Error(
+            'El servidor devolvió usuarios en un formato incorrecto.'
+          )
+        }
+
+        const usuarioEncontrado = usuarios.find(
+          item => String(item.run) === String(run)
+        )
+
+        if (!usuarioEncontrado) {
+
+          if (activo) {
+            setUsuario(null)
+          }
+
+          return
+        }
+
+        const ordenes = await listarOrdenes()
+
+        if (!Array.isArray(ordenes)) {
+          throw new Error(
+            'El servidor devolvió órdenes en un formato incorrecto.'
+          )
+        }
+
+        const comprasUsuario = ordenes.filter(
+          orden =>
+            String(orden.usuarioId) ===
+            String(usuarioEncontrado.id)
+        )
+
+        if (activo) {
+
+          setUsuario(usuarioEncontrado)
+
+          setHistorial(
+            [...comprasUsuario].sort(
+              (a, b) => Number(b.id) - Number(a.id)
+            )
+          )
+
+        }
+
+      } catch (error) {
+
+        if (activo) {
+          setError(
+            error.message ||
+            'No fue posible consultar el historial.'
+          )
+        }
+
+      } finally {
+
+        if (activo) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarHistorial()
+
+    return () => {
+      activo = false
+    }
+
+  }, [run])
+
+  if (cargando) {
+
+    return (
+      <div className="content-card">
+        Cargando historial de compras...
+      </div>
+    )
+  }
+
+  if (error) {
+
+    return (
+      <div className="content-card">
+
+        <h1>
+          No se pudo consultar el historial
+        </h1>
+
+        <p>
+          {error}
+        </p>
+
+        <Link
+          className="btn btn-primary"
+          to="/admin/usuarios"
+        >
+          Volver a usuarios
+        </Link>
+
+      </div>
+    )
+  }
 
   if (!usuario) {
 
@@ -39,25 +192,6 @@ export default function AdminUsuarioHistorial() {
     )
   }
 
-
-  const ordenes =
-    JSON.parse(localStorage.getItem('ordenes')) ||
-    ordenesIniciales
-
-
-  const historial = ordenes.filter(orden => {
-
-    if (orden.customerRun) {
-      return orden.customerRun === usuario.run
-    }
-
-    return (
-      orden.customerEmail?.toLowerCase() ===
-      usuario.email.toLowerCase()
-    )
-  })
-
-
   return (
     <>
 
@@ -73,7 +207,6 @@ export default function AdminUsuarioHistorial() {
         </p>
 
       </div>
-
 
       <section className="content-card">
 
@@ -91,38 +224,23 @@ export default function AdminUsuarioHistorial() {
             >
 
               <h2>
-                {pedido.id}
+                Orden #{pedido.id}
               </h2>
-
 
               <p>
                 <strong>Fecha:</strong>{' '}
-                {pedido.date}
+                {formatoFecha(pedido.fecha)}
               </p>
-
 
               <p>
                 <strong>Estado:</strong>{' '}
-                {pedido.status}
+                {pedido.estado}
               </p>
-
 
               <p>
                 <strong>Total:</strong>{' '}
-                $
-                {Number(pedido.total).toLocaleString('es-CL')}
+                {formatoPesos(pedido.total)}
               </p>
-
-
-              <p>
-                <strong>Productos:</strong>{' '}
-                {pedido.items?.reduce(
-                  (total, item) =>
-                    total + (item.qty ?? 1),
-                  0
-                ) || 0}
-              </p>
-
 
               <Link
                 className="btn btn-secondary btn-sm"
@@ -144,7 +262,6 @@ export default function AdminUsuarioHistorial() {
         )}
 
       </section>
-
 
       <div className="admin-button-row">
 

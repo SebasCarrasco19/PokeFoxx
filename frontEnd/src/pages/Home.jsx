@@ -1,21 +1,79 @@
+
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
-import { productosIniciales } from '../data/adminData'
 
 function Home() {
 
-  const productos =
-    JSON.parse(localStorage.getItem('productos')) ||
-    productosIniciales
+  const [productos, setProductos] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
 
+  useEffect(() => {
+
+    const controlador = new AbortController()
+
+    async function cargarProductos() {
+
+      try {
+
+        setCargando(true)
+        setError('')
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/productos',
+          {
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+          throw new Error(
+            'No fue posible obtener los productos.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!Array.isArray(datos)) {
+          throw new Error(
+            'El servidor entregó un formato incorrecto.'
+          )
+        }
+
+        if (!controlador.signal.aborted) {
+          setProductos(datos)
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setError(
+            error.message ||
+            'No fue posible cargar los productos.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarProductos()
+
+    return () => controlador.abort()
+
+  }, [])
 
   const productosDestacados =
     productos.slice(0, 4)
 
-
   const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
-
+    JSON.parse(localStorage.getItem('sesion') || 'null')
 
   return (
     <main>
@@ -40,7 +98,6 @@ function Home() {
               coleccionables.
             </p>
 
-
             <div className="hero-actions">
 
               <Link
@@ -49,7 +106,6 @@ function Home() {
               >
                 Ver productos
               </Link>
-
 
               {!sesion ? (
 
@@ -84,7 +140,6 @@ function Home() {
 
           </div>
 
-
           <div className="hero-art">
 
             <img
@@ -97,7 +152,6 @@ function Home() {
         </div>
 
       </section>
-
 
       <section className="section">
 
@@ -121,7 +175,6 @@ function Home() {
 
             </div>
 
-
             <Link
               className="btn btn-secondary"
               to="/productos"
@@ -131,8 +184,29 @@ function Home() {
 
           </div>
 
+          {cargando ? (
 
-          {productosDestacados.length > 0 ? (
+            <div className="content-card empty-state">
+
+              <h2>
+                Cargando productos...
+              </h2>
+
+            </div>
+
+          ) : error ? (
+
+            <div className="content-card empty-state">
+
+              <h2>
+                No fue posible cargar los productos
+              </h2>
+
+              <p>{error}</p>
+
+            </div>
+
+          ) : productosDestacados.length > 0 ? (
 
             <div className="product-grid">
 

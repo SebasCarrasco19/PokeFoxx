@@ -1,13 +1,13 @@
+
 import { Link, NavLink } from 'react-router-dom'
 
 export default function AdminNav() {
 
   const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
+    JSON.parse(localStorage.getItem('sesion') || 'null')
 
   const esAdministrador =
     sesion?.role === 'Administrador'
-
 
   return (
     <aside className="admin-sidebar">
@@ -22,7 +22,6 @@ export default function AdminNav() {
         />
       </Link>
 
-
       <nav
         className="admin-nav"
         aria-label="Administración"
@@ -35,7 +34,6 @@ export default function AdminNav() {
           Resumen
         </NavLink>
 
-
         <NavLink
           to="/admin/productos"
           end
@@ -43,25 +41,24 @@ export default function AdminNav() {
           Productos
         </NavLink>
 
+        {esAdministrador && (
+          <>
+            <NavLink to="/admin/productos/nuevo">
+              Nuevo producto
+            </NavLink>
 
-        <NavLink to="/admin/productos/nuevo">
-          Nuevo producto
-        </NavLink>
-
-
-        <NavLink to="/admin/productos-criticos">
-          Productos críticos
-        </NavLink>
-
+            <NavLink to="/admin/productos-criticos">
+              Productos críticos
+            </NavLink>
+          </>
+        )}
 
         <NavLink to="/admin/ordenes">
           Órdenes
         </NavLink>
 
-
         {esAdministrador && (
           <>
-
             <NavLink
               to="/admin/usuarios"
               end
@@ -69,31 +66,25 @@ export default function AdminNav() {
               Usuarios
             </NavLink>
 
-
             <NavLink to="/admin/usuarios/nuevo">
               Nuevo usuario
             </NavLink>
-
 
             <NavLink to="/admin/categorias">
               Categorías
             </NavLink>
 
-
             <NavLink to="/admin/reportes">
               Reportes
             </NavLink>
-
           </>
         )}
-
 
         <NavLink to="/admin/perfil">
           Perfil
         </NavLink>
 
       </nav>
-
 
       <div className="admin-sidebar-bottom">
 

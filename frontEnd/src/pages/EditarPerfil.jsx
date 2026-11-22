@@ -1,278 +1,330 @@
-import { useState } from 'react'
 
+import { useEffect, useState } from 'react'
 import {
   Link,
   Navigate,
   useNavigate
 } from 'react-router-dom'
 
-import {
-  usuariosIniciales,
-  ordenesIniciales,
-  regiones
-} from '../data/adminData'
-
+import { regiones } from '../data/adminData'
 import '../css/account.css'
-
 
 export default function EditarPerfil() {
 
   const navigate = useNavigate()
 
+  let sesion = null
 
-  const sesion =
-    JSON.parse(localStorage.getItem('sesion'))
-
-
-  if (!sesion) {
-
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
+  try {
+    sesion = JSON.parse(
+      localStorage.getItem('sesion') || 'null'
     )
+  } catch {
+    sesion = null
   }
 
+  const token = localStorage.getItem('token')
 
-  const usuarios =
-    JSON.parse(localStorage.getItem('usuarios')) ||
-    usuariosIniciales
-
-
-  const usuarioActual =
-    usuarios.find(
-      usuario =>
-        usuario.run === sesion.run
-    )
-
-
-  if (!usuarioActual) {
-
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    )
-  }
-
+  const [usuario, setUsuario] = useState(null)
 
   const [regionSeleccionada, setRegionSeleccionada] =
-    useState(usuarioActual.region)
-
-  const [comunaSeleccionada, setComunaSeleccionada] =
-    useState(usuarioActual.commune)
-
-  const [mensaje, setMensaje] =
     useState('')
 
+  const [comunaSeleccionada, setComunaSeleccionada] =
+    useState('')
 
-  const comunas =
-    regiones.find(
-      item =>
-        item.region === regionSeleccionada
-    )?.comunas ?? []
+  const [mensaje, setMensaje] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
 
+  const comunas = regiones.find(
+    item => item.region === regionSeleccionada
+  )?.comunas ?? []
+
+  useEffect(() => {
+
+    if (!sesion || !token) {
+      setCargando(false)
+      return
+    }
+
+    const controlador = new AbortController()
+
+    async function cargarPerfil() {
+
+      try {
+
+        setCargando(true)
+        setMensaje('')
+
+        const respuesta = await fetch(
+          'http://localhost:8080/api/v1/usuarios/me',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            signal: controlador.signal
+          }
+        )
+
+        if (!respuesta.ok) {
+
+          if (respuesta.status === 401) {
+            throw new Error(
+              'Tu sesión venció. Inicia sesión nuevamente.'
+            )
+          }
+
+          throw new Error(
+            'No fue posible cargar tus datos personales.'
+          )
+        }
+
+        const datos = await respuesta.json()
+
+        if (!controlador.signal.aborted) {
+
+          setUsuario(datos)
+
+          setRegionSeleccionada(
+            datos.region ?? ''
+          )
+
+          setComunaSeleccionada(
+            datos.commune ?? ''
+          )
+
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+          setMensaje(
+            error.message ||
+            'No fue posible cargar tu perfil.'
+          )
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+    }
+
+    cargarPerfil()
+
+    return () => controlador.abort()
+
+  }, [])
 
   function cambiarRegion(event) {
 
-    setRegionSeleccionada(
-      event.target.value
-    )
-
+    setRegionSeleccionada(event.target.value)
     setComunaSeleccionada('')
+
   }
 
-
-  function guardarCambios(event) {
+  async function guardarCambios(event) {
 
     event.preventDefault()
 
+    if (!usuario || guardando) {
+      return
+    }
+
     setMensaje('')
 
+    const formulario = new FormData(event.currentTarget)
 
-    const formulario =
-      new FormData(event.target)
+    const firstName = String(
+      formulario.get('firstName') || ''
+    ).trim()
 
+    const lastName = String(
+      formulario.get('lastName') || ''
+    ).trim()
 
-    const email =
-      formulario
-        .get('email')
-        .trim()
+    const birthDate = String(
+      formulario.get('birthDate') || ''
+    )
 
+    const address = String(
+      formulario.get('address') || ''
+    ).trim()
 
-    const correoExiste =
-      usuarios.some(
-        usuario =>
-          usuario.email.toLowerCase() ===
-            email.toLowerCase() &&
-          usuario.run !== usuarioActual.run
-      )
-
-
-    if (correoExiste) {
+    if (
+      !firstName ||
+      !lastName ||
+      !birthDate ||
+      !regionSeleccionada ||
+      !comunaSeleccionada ||
+      !address
+    ) {
 
       setMensaje(
-        'Ya existe otro usuario con ese correo.'
+        'Debes completar todos los campos obligatorios.'
       )
 
       return
     }
 
+    setGuardando(true)
 
-    const nuevaPassword =
-      formulario.get('password')
+    try {
 
+      const tokenActual =
+        localStorage.getItem('token')
 
-    const usuarioActualizado = {
+      if (!tokenActual) {
+        throw new Error(
+          'Debes iniciar sesión nuevamente.'
+        )
+      }
 
-      ...usuarioActual,
+      const datosActualizados = {
+        firstName,
+        lastName,
+        birthDate,
+        region: regionSeleccionada,
+        commune: comunaSeleccionada,
+        address
+      }
 
-
-      firstName:
-        formulario
-          .get('firstName')
-          .trim(),
-
-
-      lastName:
-        formulario
-          .get('lastName')
-          .trim(),
-
-
-      email: email,
-
-
-      birthDate:
-        formulario.get('birthDate'),
-
-
-      password:
-        nuevaPassword ||
-        usuarioActual.password,
-
-
-      region:
-        regionSeleccionada,
-
-
-      commune:
-        comunaSeleccionada,
-
-
-      address:
-        formulario
-          .get('address')
-          .trim(),
-
-
-      role: 'Cliente'
-    }
-
-
-    const usuariosActualizados =
-      usuarios.map(usuario => {
-
-        if (
-          usuario.run ===
-          usuarioActual.run
-        ) {
-
-          return usuarioActualizado
+      const respuesta = await fetch(
+        'http://localhost:8080/api/v1/usuarios/me',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenActual}`
+          },
+          body: JSON.stringify(datosActualizados)
         }
-
-        return usuario
-      })
-
-
-    localStorage.setItem(
-      'usuarios',
-      JSON.stringify(
-        usuariosActualizados
       )
-    )
 
+      if (!respuesta.ok) {
 
-    const ordenes =
-      JSON.parse(
-        localStorage.getItem('ordenes')
-      ) ||
-      ordenesIniciales
-
-
-    const ordenesActualizadas =
-      ordenes.map(orden => {
-
-        const perteneceAlUsuario =
-          orden.customerRun ===
-            usuarioActual.run ||
-          (
-            !orden.customerRun &&
-            orden.customerEmail
-              ?.toLowerCase() ===
-              usuarioActual.email
-                .toLowerCase()
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció. Inicia sesión nuevamente.'
           )
-
-
-        if (perteneceAlUsuario) {
-
-          return {
-
-            ...orden,
-
-            customer:
-              `${usuarioActualizado.firstName} ${usuarioActualizado.lastName}`,
-
-            customerEmail:
-              usuarioActualizado.email,
-
-            customerRun:
-              usuarioActualizado.run
-          }
         }
 
+        if (respuesta.status === 403) {
+          throw new Error(
+            'No tienes permiso para modificar este perfil.'
+          )
+        }
 
-        return orden
-      })
+        const contenido = await respuesta.text()
 
+        let datosError = null
 
-    localStorage.setItem(
-      'ordenes',
-      JSON.stringify(
-        ordenesActualizadas
+        try {
+          datosError = contenido
+            ? JSON.parse(contenido)
+            : null
+        } catch {
+          datosError = null
+        }
+
+        throw new Error(
+          datosError?.error ||
+          datosError?.message ||
+          `No fue posible guardar los cambios (HTTP ${respuesta.status}).`
+        )
+      }
+
+      const actualizado = await respuesta.json()
+
+      const sesionActual = JSON.parse(
+        localStorage.getItem('sesion') || 'null'
       )
-    )
 
+      if (sesionActual) {
 
-    const sesionActualizada = {
+        localStorage.setItem(
+          'sesion',
+          JSON.stringify({
+            ...sesionActual,
+            firstName: actualizado.firstName,
+            lastName: actualizado.lastName,
+            email: actualizado.email,
+            run: actualizado.run
+          })
+        )
 
-      ...sesion,
+      }
 
-      firstName:
-        usuarioActualizado.firstName,
+      navigate('/perfil')
 
-      lastName:
-        usuarioActualizado.lastName,
+    } catch (error) {
 
-      email:
-        usuarioActualizado.email
+      setMensaje(
+        error.message ||
+        'Ocurrió un error al guardar los cambios.'
+      )
+
+    } finally {
+
+      setGuardando(false)
+
     }
-
-
-    localStorage.setItem(
-      'sesion',
-      JSON.stringify(
-        sesionActualizada
-      )
-    )
-
-
-    navigate('/perfil')
   }
 
+  if (!sesion || !token) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (cargando) {
+
+    return (
+      <main>
+        <section className="section">
+          <div className="container">
+            <div className="content-card">
+              Cargando datos personales...
+            </div>
+          </div>
+        </section>
+      </main>
+    )
+  }
+
+  if (!usuario) {
+
+    return (
+      <main>
+        <section className="section">
+          <div className="container">
+
+            <div className="content-card">
+
+              <h1>
+                No se pudo cargar el perfil
+              </h1>
+
+              <p>
+                {mensaje || 'Usuario no encontrado.'}
+              </p>
+
+              <Link
+                className="btn btn-secondary"
+                to="/perfil"
+              >
+                Volver a mi perfil
+              </Link>
+
+            </div>
+
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main>
@@ -298,13 +350,11 @@ export default function EditarPerfil() {
 
       </section>
 
-
       <section className="section">
 
         <div className="container">
 
           <section className="content-card edit-profile-card">
-
 
             <div className="edit-profile-top-actions">
 
@@ -316,7 +366,6 @@ export default function EditarPerfil() {
               </Link>
 
             </div>
-
 
             <div className="account-heading">
 
@@ -334,25 +383,20 @@ export default function EditarPerfil() {
 
             </div>
 
-
             <span className="profile-role">
               Perfil: Cliente
             </span>
-
 
             {mensaje && (
 
               <div
                 className="form-message error"
-                style={{
-                  marginBottom: '20px'
-                }}
+                style={{ marginBottom: '20px' }}
               >
                 ⚠️ {mensaje}
               </div>
 
             )}
-
 
             <form
               id="profileForm"
@@ -360,7 +404,6 @@ export default function EditarPerfil() {
             >
 
               <div className="form-grid">
-
 
                 <div className="form-group">
 
@@ -371,12 +414,11 @@ export default function EditarPerfil() {
                   <input
                     id="profileRun"
                     name="run"
-                    value={usuarioActual.run}
+                    value={usuario.run ?? ''}
                     readOnly
                   />
 
                 </div>
-
 
                 <div className="form-group">
 
@@ -387,15 +429,12 @@ export default function EditarPerfil() {
                   <input
                     id="profileFirstName"
                     name="firstName"
-                    defaultValue={
-                      usuarioActual.firstName
-                    }
-                    maxLength="50"
+                    defaultValue={usuario.firstName ?? ''}
+                    maxLength={50}
                     required
                   />
 
                 </div>
-
 
                 <div className="form-group">
 
@@ -406,15 +445,12 @@ export default function EditarPerfil() {
                   <input
                     id="profileLastName"
                     name="lastName"
-                    defaultValue={
-                      usuarioActual.lastName
-                    }
-                    maxLength="100"
+                    defaultValue={usuario.lastName ?? ''}
+                    maxLength={100}
                     required
                   />
 
                 </div>
-
 
                 <div className="form-group">
 
@@ -425,16 +461,16 @@ export default function EditarPerfil() {
                   <input
                     id="profileEmail"
                     name="email"
-                    defaultValue={
-                      usuarioActual.email
-                    }
                     type="email"
-                    maxLength="100"
-                    required
+                    value={usuario.email ?? ''}
+                    readOnly
                   />
 
-                </div>
+                  <span className="help-text">
+                    El correo no se puede modificar desde el perfil.
+                  </span>
 
+                </div>
 
                 <div className="form-group">
 
@@ -446,36 +482,11 @@ export default function EditarPerfil() {
                     id="profileBirthDate"
                     name="birthDate"
                     type="date"
-                    defaultValue={
-                      usuarioActual.birthDate
-                    }
+                    defaultValue={usuario.birthDate ?? ''}
                     required
                   />
 
                 </div>
-
-
-                <div className="form-group">
-
-                  <label htmlFor="profilePassword">
-                    Nueva contraseña
-                  </label>
-
-                  <input
-                    id="profilePassword"
-                    name="password"
-                    type="password"
-                    minLength="4"
-                    maxLength="10"
-                    autoComplete="new-password"
-                  />
-
-                  <span className="help-text">
-                    Déjala vacía si no quieres cambiarla.
-                  </span>
-
-                </div>
-
 
                 <div className="form-group">
 
@@ -495,7 +506,6 @@ export default function EditarPerfil() {
                       Selecciona una región
                     </option>
 
-
                     {regiones.map(item => (
 
                       <option
@@ -510,7 +520,6 @@ export default function EditarPerfil() {
                   </select>
 
                 </div>
-
 
                 <div className="form-group">
 
@@ -535,7 +544,6 @@ export default function EditarPerfil() {
                       Selecciona una comuna
                     </option>
 
-
                     {comunas.map(comuna => (
 
                       <option
@@ -551,7 +559,6 @@ export default function EditarPerfil() {
 
                 </div>
 
-
                 <div className="form-group full">
 
                   <label htmlFor="profileAddress">
@@ -561,10 +568,8 @@ export default function EditarPerfil() {
                   <input
                     id="profileAddress"
                     name="address"
-                    defaultValue={
-                      usuarioActual.address
-                    }
-                    maxLength="300"
+                    defaultValue={usuario.address ?? ''}
+                    maxLength={300}
                     required
                   />
 
@@ -572,16 +577,17 @@ export default function EditarPerfil() {
 
               </div>
 
-
               <div className="profile-actions">
 
                 <button
                   className="btn btn-primary"
                   type="submit"
+                  disabled={guardando}
                 >
-                  Guardar cambios
+                  {guardando
+                    ? 'Guardando...'
+                    : 'Guardar cambios'}
                 </button>
-
 
                 <Link
                   className="btn btn-secondary"
