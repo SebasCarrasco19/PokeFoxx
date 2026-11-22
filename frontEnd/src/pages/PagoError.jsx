@@ -1,6 +1,8 @@
+
 import { Link } from 'react-router-dom'
 
 function PagoError() {
+
   return (
     <main>
 
@@ -19,8 +21,8 @@ function PagoError() {
             </h1>
 
             <p>
-              Uno o más productos de tu carrito ya no tienen
-              stock suficiente para completar el pedido.
+              El pago no pudo ser procesado correctamente.
+              No se ha registrado ninguna orden nueva.
             </p>
 
             <p>

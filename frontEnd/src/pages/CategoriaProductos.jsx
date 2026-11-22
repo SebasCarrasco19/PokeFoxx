@@ -1,49 +1,143 @@
+
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+
 import ProductCard from '../components/ProductCard'
-import {
-  productosIniciales,
-  categorias as categoriasIniciales
-} from '../data/adminData'
 
 function CategoriaProductos() {
 
   const { categoria } = useParams()
 
+  const [productos, setProductos] = useState([])
+  const [categorias, setCategorias] = useState([])
 
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState('')
+
+  // Crear URL amigable para cada categoría
   function crearSlug(texto) {
 
-    return texto
+    return String(texto || '')
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
+
   }
 
+  // Obtener productos y categorías desde Spring Boot
+  useEffect(() => {
 
-  const productos =
-    JSON.parse(localStorage.getItem('productos')) ||
-    productosIniciales
+    const controlador = new AbortController()
 
+    async function cargarDatos() {
 
-  const categorias =
-    JSON.parse(localStorage.getItem('categorias')) ||
-    categoriasIniciales
+      try {
 
+        setCargando(true)
+        setError('')
+
+        const [respuestaProductos, respuestaCategorias] =
+          await Promise.all([
+
+            fetch(
+              'http://localhost:8080/api/v1/productos',
+              {
+                signal: controlador.signal
+              }
+            ),
+
+            fetch(
+              'http://localhost:8080/api/v1/categorias',
+              {
+                signal: controlador.signal
+              }
+            )
+
+          ])
+
+        if (!respuestaProductos.ok) {
+          throw new Error(
+            'No fue posible cargar los productos.'
+          )
+        }
+
+        if (!respuestaCategorias.ok) {
+          throw new Error(
+            'No fue posible cargar las categorías.'
+          )
+        }
+
+        const datosProductos =
+          await respuestaProductos.json()
+
+        const datosCategorias =
+          await respuestaCategorias.json()
+
+        if (
+          !Array.isArray(datosProductos) ||
+          !Array.isArray(datosCategorias)
+        ) {
+
+          throw new Error(
+            'El servidor devolvió datos incorrectos.'
+          )
+
+        }
+
+        if (!controlador.signal.aborted) {
+
+          setProductos(datosProductos)
+          setCategorias(datosCategorias)
+
+        }
+
+      } catch (error) {
+
+        if (error.name !== 'AbortError') {
+
+          setError(
+            error.message ||
+            'No fue posible cargar la categoría.'
+          )
+
+        }
+
+      } finally {
+
+        if (!controlador.signal.aborted) {
+          setCargando(false)
+        }
+
+      }
+
+    }
+
+    cargarDatos()
+
+    return () => controlador.abort()
+
+  }, [])
+
+  // Buscar la categoría real usando el slug de la URL
+  const categoriaActual = categorias.find(
+    item =>
+      item.active === true &&
+      crearSlug(item.name) === categoria
+  )
 
   const nombreCategoria =
-    categorias.find(
-      nombre => crearSlug(nombre) === categoria
-    )
+    categoriaActual?.name || null
 
-
-  const productosCategoria =
-    nombreCategoria
-      ? productos.filter(
-          producto =>
-            producto.category === nombreCategoria
-        )
-      : []
-
+  // Filtrar productos por el ID real de la categoría
+  const productosCategoria = categoriaActual
+    ? productos.filter(
+        producto =>
+          Number(producto.categoria?.id) ===
+          Number(categoriaActual.id)
+      )
+    : []
 
   return (
     <main>
@@ -66,71 +160,70 @@ function CategoriaProductos() {
 
             {' / '}
 
-            {nombreCategoria || 'Categoría'}
+            {cargando
+              ? 'Cargando...'
+              : nombreCategoria || 'Categoría'}
 
           </div>
-
 
           <span className="eyebrow">
             Categoría
           </span>
 
-
           <h1>
-            {nombreCategoria || 'Categoría no encontrada'}
+            {cargando
+              ? 'Cargando categoría...'
+              : nombreCategoria || 'Categoría no encontrada'}
           </h1>
 
-
           <p>
-            {nombreCategoria
-              ? 'Productos disponibles en esta categoría.'
-              : 'La categoría solicitada no existe.'}
+            {cargando
+              ? 'Estamos cargando los productos disponibles.'
+              : nombreCategoria
+                ? 'Productos disponibles en esta categoría.'
+                : error
+                  ? 'No fue posible consultar esta categoría.'
+                  : 'La categoría solicitada no existe.'}
           </p>
 
         </div>
 
       </section>
 
-
       <section className="section">
 
         <div className="container">
 
-          {productosCategoria.length > 0 ? (
+          {/* Estado de carga */}
 
-            <div className="product-grid">
+          {cargando && (
 
-              {productosCategoria.map(producto => (
+            <div className="content-card">
 
-                <ProductCard
-                  key={producto.id}
-                  producto={producto}
-                />
-
-              ))}
+              <p>
+                Cargando productos de la categoría...
+              </p>
 
             </div>
 
-          ) : (
+          )}
 
-            <div className="content-card empty-state">
+          {/* Error al consultar el backend */}
+
+          {!cargando && error && (
+
+            <div className="content-card">
 
               <h2>
-                {nombreCategoria
-                  ? 'No hay productos'
-                  : 'Categoría no encontrada'}
+                No se pudo cargar la categoría
               </h2>
 
-
-              <p>
-                {nombreCategoria
-                  ? 'Todavía no hay productos registrados en esta categoría.'
-                  : 'La categoría que intentas visitar no existe.'}
+              <p className="form-message error">
+                {error}
               </p>
 
-
               <Link
-                className="btn btn-primary"
+                className="btn btn-secondary"
                 to="/categorias"
               >
                 Volver a categorías
@@ -139,6 +232,58 @@ function CategoriaProductos() {
             </div>
 
           )}
+
+          {/* Productos encontrados */}
+
+          {!cargando &&
+            !error &&
+            productosCategoria.length > 0 && (
+
+              <div className="product-grid">
+
+                {productosCategoria.map(producto => (
+
+                  <ProductCard
+                    key={producto.id}
+                    producto={producto}
+                  />
+
+                ))}
+
+              </div>
+
+            )}
+
+          {/* Categoría vacía o inexistente */}
+
+          {!cargando &&
+            !error &&
+            productosCategoria.length === 0 && (
+
+              <div className="content-card empty-state">
+
+                <h2>
+                  {nombreCategoria
+                    ? 'No hay productos'
+                    : 'Categoría no encontrada'}
+                </h2>
+
+                <p>
+                  {nombreCategoria
+                    ? 'Todavía no hay productos registrados en esta categoría.'
+                    : 'La categoría que intentas visitar no existe.'}
+                </p>
+
+                <Link
+                  className="btn btn-primary"
+                  to="/categorias"
+                >
+                  Volver a categorías
+                </Link>
+
+              </div>
+
+            )}
 
         </div>
 
